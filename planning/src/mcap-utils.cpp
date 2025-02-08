@@ -392,7 +392,7 @@ foxglove::SceneEntity MakeGraph(const Graph &graph, int64_t writeTime) {
   for (const auto &[start_idx, end_idx] : graph.edges) {
     foxglove::LinePrimitive edgeLine;
     edgeLine.set_type(foxglove::LinePrimitive::LINE_LIST);
-    edgeLine.set_thickness(0.05);
+    edgeLine.set_thickness(0.01);
     edgeLine.set_scale_invariant(false);
 
     foxglove::Point3 startPoint;

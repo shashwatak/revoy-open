@@ -6,7 +6,7 @@
 #include "planning/types.h"
 
 #include <ompl/base/State.h>
-#include <ompl/geometric/planners/rrt/InformedRRTstar.h>
+#include <ompl/geometric/planners/prm/LazyPRMstar.h>
 
 namespace planning {
 
@@ -26,7 +26,7 @@ ProximityPlanner::ProximityPlanner(const Bounds &bounds,
 
   // set the planner
   setup_.setPlanner(
-      std::make_shared<ompl::geometric::InformedRRTstar>(setup_.getSpaceInformation()));
+      std::make_shared<ompl::geometric::LazyPRMstar>(setup_.getSpaceInformation()));
 
   // set the bounds for the R^2 part of SE(2)
   ompl::base::RealVectorBounds rbounds(2);
@@ -63,7 +63,7 @@ void ProximityPlanner::plan(const HookedPose &start_, const HookedPose &goal_,
 
   setup_.setup();
   // setup_.print();
-  ompl::base::PlannerStatus solved = setup_.solve(0.1);
+  ompl::base::PlannerStatus solved = setup_.solve(0.01);
 
   if (solved != ompl::base::PlannerStatus::EXACT_SOLUTION &&
       solved != ompl::base::PlannerStatus::APPROXIMATE_SOLUTION) {
