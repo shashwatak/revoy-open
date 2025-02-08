@@ -6,27 +6,16 @@
 #include "planning/types.h"
 
 #include <ompl/base/State.h>
-#include <ompl/control/planners/rrt/RRT.h>
+#include <ompl/geometric/planners/rrt/InformedRRTstar.h>
 
 namespace planning {
 
 ProximityPlanner::ProximityPlanner(const Bounds &bounds,
                                    const BodyParams &bodyParams)
-    : bounds_(bounds), space_(std::make_shared<RevoySpace>()),
-      cspace_(
-          std::make_shared<ompl::control::DiscreteControlSpace>(space_, 0, 1)),
-      setup_(cspace_), validityChecker_(std::make_shared<ValidityChecker>(
-                           setup_.getSpaceInformation(), bodyParams)),
-      propagator_(std::make_shared<Propagator>(setup_.getSpaceInformation(),
-                                               bodyParams)) {
-
+    : bounds_(bounds), space_(std::make_shared<Flatland>(bounds)), setup_(space_),
+      validityChecker_(std::make_shared<ValidityChecker>(
+          setup_.getSpaceInformation(), bodyParams)) {
   ompl::msg::setLogLevel(ompl::msg::LogLevel::LOG_WARN);
-
-  // set bounds for speed and steer
-  cspace_->setBounds(0, 1);
-
-  // set the state propagation routine
-  setup_.setStatePropagator(propagator_);
 
   // set state validity checking for this space
   setup_.setStateValidityChecker(validityChecker_);
@@ -37,10 +26,7 @@ ProximityPlanner::ProximityPlanner(const Bounds &bounds,
 
   // set the planner
   setup_.setPlanner(
-      std::make_shared<ompl::control::RRT>(setup_.getSpaceInformation()));
-
-  // control steps per propogation
-  setup_.getSpaceInformation()->setMinMaxControlDuration(1, 5);
+      std::make_shared<ompl::geometric::InformedRRTstar>(setup_.getSpaceInformation()));
 
   // set the bounds for the R^2 part of SE(2)
   ompl::base::RealVectorBounds rbounds(2);
@@ -51,22 +37,20 @@ ProximityPlanner::ProximityPlanner(const Bounds &bounds,
   space_->setBounds(rbounds);
 };
 
-void ProximityPlanner::plan(const HookedPose &start_, const HookedPose &_,
+void ProximityPlanner::plan(const HookedPose &start_, const HookedPose &goal_,
                             std::shared_ptr<OccupancyGrid> grid) {
 
   // create a start state
-  ompl::base::ScopedState<RevoySpace> start(space_);
+  ompl::base::ScopedState<Flatland> start(space_);
   start->setX(start_.position.x());
   start->setY(start_.position.y());
   start->setYaw(start_.yaw);
-  start->setTrailerYaw(start_.trailerYaw);
 
   // create goal state, move forward a little only
-  ompl::base::ScopedState<RevoySpace> goal(space_);
-  goal->setX(start->getX() + cos(start->getYaw()));
-  goal->setY(start->getY() + sin(start->getYaw()));
-  goal->setYaw(start->getYaw());
-  goal->setYaw(start->getTrailerYaw());
+  ompl::base::ScopedState<Flatland> goal(space_);
+  goal->setX(goal_.position.x());
+  goal->setY(goal_.position.y());
+  goal->setYaw(goal_.yaw);
 
   setup_.setStartAndGoalStates(start, goal, 1);
 
@@ -81,26 +65,28 @@ void ProximityPlanner::plan(const HookedPose &start_, const HookedPose &_,
   // setup_.print();
   ompl::base::PlannerStatus solved = setup_.solve(0.1);
 
-  if (solved != ompl::base::PlannerStatus::EXACT_SOLUTION) {
-    std::cout << "not exact solution: " << solved << std::endl;
+  if (solved != ompl::base::PlannerStatus::EXACT_SOLUTION &&
+      solved != ompl::base::PlannerStatus::APPROXIMATE_SOLUTION) {
+    std::cout << "no solution: " << solved << std::endl;
   } else {
+    std::cout << "solution: " << solved << std::endl;
     auto &solution = setup_.getSolutionPath();
     for (const auto baseState : solution.getStates()) {
-      const auto state = baseState->as<RevoySpace::StateType>();
+      const auto state = baseState->as<Flatland::StateType>();
       path_.push_back({state->getX(), state->getY()});
     }
 
     if (solution.getStateCount() > 0) {
-      const auto ctrl =
-          solution.getControl(0)
-              ->as<ompl::control::DiscreteControlSpace::ControlType>();
-      controls_.speed = ctrl->value;
-      controls_.steer = 0;
-      controls_.duration = solution.getControlDuration(0);
+      // const auto ctrl =
+      //     solution.getControl(0)
+      //         ->as<ompl::control::DiscreteControlSpace::ControlType>();
+      // controls_.speed = ctrl->value;
+      // controls_.steer = 0;
+      // controls_.duration = solution.getControlDuration(0);
     }
-
-    FillGraph(graph_, setup_);
   }
+
+  FillGraph<ompl::geometric::SimpleSetup, Flatland::StateType>(graph_, setup_);
   setup_.clear();
 }
 
@@ -113,7 +99,7 @@ ProximityPlanner::getLastOccupancyGrid() const {
 }
 
 ProximityPlanner::ValidityChecker::ValidityChecker(
-    const ompl::control::SpaceInformationPtr &si, const BodyParams &bodyParams)
+    const ompl::base::SpaceInformationPtr &si, const BodyParams &bodyParams)
     : ompl::base::StateValidityChecker(si), bodyParams_(bodyParams) {}
 
 void ProximityPlanner::ValidityChecker::setOccupancyGrid(
@@ -129,11 +115,10 @@ bool ProximityPlanner::ValidityChecker::isValid(
     assert(false);
     return false;
   }
-  const auto *state = state_->as<RevoySpace::StateType>();
+  const auto *state = state_->as<Flatland::StateType>();
   bool isValid = si_->satisfiesBounds(state);
 
-  const HookedPose pose = {
-      {state->getX(), state->getY()}, state->getYaw(), state->getTrailerYaw()};
+  const HookedPose pose = {{state->getX(), state->getY()}, state->getYaw(), 0};
   const Footprints body = FootprintsFromPose(pose, bodyParams_);
 
   /// put the footprint into the occupancy frame to check if its hitting
@@ -144,25 +129,7 @@ bool ProximityPlanner::ValidityChecker::isValid(
     isValid &= !grid_->isFootprintOccupied(partInRevoyFrame);
   }
 
-  isValid &= fabs(state->getHitchAngle()) < (M_PI / 2.0);
   return isValid;
-}
-
-ProximityPlanner::Propagator::Propagator(
-    const std::shared_ptr<ompl::control::SpaceInformation> si,
-    const BodyParams &bodyParams)
-    : ompl::control::StatePropagator(si), bodyParams_(bodyParams) {}
-
-void ProximityPlanner::Propagator::propagate(
-    const ompl::base::State *start, const ompl::control::Control *control,
-    const double duration, ompl::base::State *result) const {
-
-  const auto ctrl =
-      control->as<ompl::control::DiscreteControlSpace::ControlType>();
-  const double speed = ctrl->value;
-  RevoySpace::Propagate(start->as<RevoySpace::StateType>(), {speed, 0},
-                        bodyParams_, duration,
-                        result->as<RevoySpace::StateType>());
 };
 
 } // namespace planning

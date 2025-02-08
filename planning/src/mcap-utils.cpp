@@ -371,7 +371,7 @@ foxglove::SceneEntity MakeGraph(const Graph &graph, int64_t writeTime) {
 
   foxglove::LinePrimitive nodePoints;
   nodePoints.set_type(foxglove::LinePrimitive::LINE_LIST);
-  nodePoints.set_thickness(0.1);
+  nodePoints.set_thickness(0.125);
   nodePoints.set_scale_invariant(false);
 
   for (const auto &node : graph.nodes) {
@@ -385,7 +385,7 @@ foxglove::SceneEntity MakeGraph(const Graph &graph, int64_t writeTime) {
   nodePoints.mutable_color()->set_r(1.0);
   nodePoints.mutable_color()->set_g(1.0);
   nodePoints.mutable_color()->set_b(1.0);
-  nodePoints.mutable_color()->set_a(1.0);
+  nodePoints.mutable_color()->set_a(0.3);
 
   fgGraph.mutable_lines()->Add(std::move(nodePoints));
 
