@@ -6,15 +6,22 @@
 #include "planning/types.h"
 
 #include <ompl/base/State.h>
+#include <ompl/base/samplers/ObstacleBasedValidStateSampler.h>
 #include <ompl/geometric/planners/prm/LazyPRMstar.h>
+#include <ompl/geometric/planners/rrt/RRTstar.h>
 
 namespace planning {
 
+ompl::base::ValidStateSamplerPtr
+AllocOBValidStateSampler(const ompl::base::SpaceInformation *si) {
+  return std::make_shared<ompl::base::ObstacleBasedValidStateSampler>(si);
+}
+
 ProximityPlanner::ProximityPlanner(const Bounds &bounds,
                                    const BodyParams &bodyParams)
-    : bounds_(bounds), space_(std::make_shared<Flatland>(bounds)), setup_(space_),
-      validityChecker_(std::make_shared<ValidityChecker>(
-          setup_.getSpaceInformation(), bodyParams)) {
+    : bounds_(bounds), space_(std::make_shared<Flatland>(bounds)),
+      setup_(space_), validityChecker_(std::make_shared<ValidityChecker>(
+                          setup_.getSpaceInformation(), bodyParams)) {
   ompl::msg::setLogLevel(ompl::msg::LogLevel::LOG_WARN);
 
   // set state validity checking for this space
@@ -26,7 +33,7 @@ ProximityPlanner::ProximityPlanner(const Bounds &bounds,
 
   // set the planner
   setup_.setPlanner(
-      std::make_shared<ompl::geometric::LazyPRMstar>(setup_.getSpaceInformation()));
+      std::make_shared<ompl::geometric::RRTstar>(setup_.getSpaceInformation()));
 
   // set the bounds for the R^2 part of SE(2)
   ompl::base::RealVectorBounds rbounds(2);
@@ -118,16 +125,20 @@ bool ProximityPlanner::ValidityChecker::isValid(
   const auto *state = state_->as<Flatland::StateType>();
   bool isValid = si_->satisfiesBounds(state);
 
-  const HookedPose pose = {{state->getX(), state->getY()}, state->getYaw(), 0};
-  const Footprints body = FootprintsFromPose(pose, bodyParams_);
+  const HookedPose pose = {
+      {state->getX(), state->getY()}, state->getYaw(), state->getTrailerYaw()};
+  const Point point = ReverseTransformPoint(pose.position, currentPose_);
+  isValid &= !grid_->isPointOccupied(point);
 
-  /// put the footprint into the occupancy frame to check if its hitting
-  /// anything
-  for (const Footprint &part : body) {
-    const Footprint partInRevoyFrame =
-        ReverseTransformFootprint(part, currentPose_);
-    isValid &= !grid_->isFootprintOccupied(partInRevoyFrame);
-  }
+  // const Footprints body = FootprintsFromPose(pose, bodyParams_);
+
+  // /// put the footprint into the occupancy frame to check if its hitting
+  // /// anything
+  // for (const Footprint &part : body) {
+  //   const Footprint partInRevoyFrame =
+  //       ReverseTransformFootprint(part, currentPose_);
+  //   isValid &= !grid_->isFootprintOccupied(partInRevoyFrame);
+  // }
 
   return isValid;
 };

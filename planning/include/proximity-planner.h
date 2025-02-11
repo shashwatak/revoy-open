@@ -12,7 +12,6 @@
 namespace planning {
 
 /// Plans to move forward slowly unless an obstacle is in the way.
-///
 class ProximityPlanner {
 public:
   ProximityPlanner() = delete;
@@ -53,6 +52,7 @@ public:
   public:
     ValidityChecker(const ompl::base::SpaceInformationPtr &si,
                     const BodyParams &bodyParams);
+
     /// used by OMPL during search
     bool isValid(const ompl::base::State *state_) const override;
 
@@ -78,9 +78,9 @@ public:
       rbounds.high[1] = bounds.upperY;
       setBounds(rbounds);
     }
-    
+
     class StateType : public ompl::base::RealVectorStateSpace::StateType {
-    
+
     public:
       StateType() = default;
       double getX() const { return values[0]; };

@@ -107,10 +107,9 @@ const std::shared_ptr<OccupancyGrid>
 FootprintsToOccupancyGrid(const Footprints &footprints,
                           const HookedPose &pose) {
 
-  /// 200 * 200 cells = 40000 cells
-  /// 0.1m * 200 cells means grid total diagonal is ~28m, effective range ~14m
-  static constexpr uint16_t NUM_CELLS = 200;
-  static constexpr double CELL_LENGTH = 0.1; // meters
+  static constexpr double LENGTH = 100.0;
+  static constexpr uint16_t NUM_CELLS = 250;
+  static constexpr double CELL_LENGTH = LENGTH / NUM_CELLS; // meters
   static constexpr double GRID_OFFSET =
       CELL_LENGTH * ((float)NUM_CELLS) / 2.0; // meters
 
