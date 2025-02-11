@@ -25,20 +25,15 @@ void Simpl::update(int64_t time, double actualSpeed, double actualSteer) {
 
   // update revoy w/ controls
   revoyEv_.update(controls, scenario_.bounds, scenario_.timeParams.dt / 1e6);
+  // revoyEv_.print(scenario_.bodyParams);
 
   // get simulated obstacle footprints from simulated observers
   const Footprints footprints = getVisibleFootprints(time);
 
   const std::shared_ptr<OccupancyGrid> grid =
       FootprintsToOccupancyGrid(footprints, revoyEv_.getHookedPose());
+
   // grid->print();
-  // std::cout << "revoy feet" << std::endl;
-  // for (const auto &bodyPart : revoyEv_.getBody(scenario_.bodyParams)) {
-  //   for (const auto &point : bodyPart) {
-  //     std::cout << "    (" << point.x() << "," << point.y() << ")\n";
-  //   }
-  // }
-  // std::cout << std::endl;
 
   // update plan w/ latest revoy pose and occupancy grid
   proximityPlanner_.plan(revoyEv_.getHookedPose(), scenario_.goal, grid);

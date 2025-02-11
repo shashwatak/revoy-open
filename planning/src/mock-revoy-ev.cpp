@@ -1,5 +1,6 @@
 #include "planning/mock-revoy-ev.h"
 #include "planning/footprint-transform.h"
+#include "planning/include/mock-revoy-ev.h"
 #include "planning/types.h"
 
 #include <iostream>
@@ -37,6 +38,16 @@ const HookedPose MockRevoyEv::getHookedPose() const { return hookedPose_; }
 const Footprints MockRevoyEv::getBody(const BodyParams &params) const {
 
   return FootprintsFromPose(getHookedPose(), params);
+}
+
+void MockRevoyEv::print(const BodyParams &params) const {
+  std::cout << "revoy feet" << std::endl;
+  for (const auto &bodyPart : getBody(params)) {
+    for (const auto &point : bodyPart) {
+      std::cout << "    (" << point.x() << "," << point.y() << ")\n";
+    }
+  }
+  std::cout << std::endl;
 }
 
 } // namespace planning

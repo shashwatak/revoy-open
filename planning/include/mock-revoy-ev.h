@@ -15,6 +15,8 @@ public:
   const Footprints getBody(const BodyParams &params) const;
   const HookedPose getHookedPose() const;
 
+  void print(const BodyParams &params) const;
+
 private:
   HookedPose hookedPose_;
 };
