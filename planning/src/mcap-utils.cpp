@@ -31,9 +31,11 @@ namespace {
 /// eigen helper
 Eigen::Quaterniond MakeQuaternion(double angle);
 
-/// foxglove proto helpers
+/// foxglove proto helpers, convert planner geometries into visualizer protobufs
 foxglove::SceneUpdate MakeActorSceneUpdate(const Scene &scene, int64_t time);
 foxglove::SceneUpdate MakeGraphSceneUpdate(const Graph &graph, int64_t time);
+foxglove::SceneUpdate MakePathSceneUpdate(const std::vector<Pose>& poses, int64_t writeTime);
+foxglove::SceneUpdate MakePathSceneUpdate(const std::vector<HookedPose>& poses, int64_t writeTime);
 foxglove::SceneUpdate MakePathSceneUpdate(const Path &path, int64_t time);
 foxglove::SceneUpdate MakeScenarioSceneUpdate(const Scenario &scenario,
                                               double writeTime);
@@ -101,30 +103,25 @@ McapWrapper::McapWrapper(const std::string outputFilename) {
 }
 
 void McapWrapper::write(const Scene &scene, int64_t writeTime) {
-
-std::cout << "mcap write" << std::endl;
   
-  assert(scene.graphs.size() == 2);
-  assert(scene.plannedPaths.size() == 2);
-
   const auto actors =
       MakeActorSceneUpdate(scene, writeTime).SerializeAsString();
   writeTopic(actors, ACTORS_TOPIC, writeTime);
 
   /// COARSE PLAN
   const auto coarseGraph =
-      MakeGraphSceneUpdate(scene.graphs[0], writeTime).SerializeAsString();
+      MakeGraphSceneUpdate(scene.coarseGraph, writeTime).SerializeAsString();
   writeTopic(coarseGraph, COARSE_GRAPH_TOPIC, writeTime);
   const auto coarsePath =
-      MakePathSceneUpdate(scene.plannedPaths[0], writeTime).SerializeAsString();
+      MakePathSceneUpdate(scene.coarseSolution, writeTime).SerializeAsString();
   writeTopic(coarsePath, COARSE_PATH_TOPIC, writeTime);
 
-  // /// CONTROL PLAN
+  /// CONTROL PLAN
   const auto controlGraph =
-      MakeGraphSceneUpdate(scene.graphs[1], writeTime).SerializeAsString();
+      MakeGraphSceneUpdate(scene.controlGraph, writeTime).SerializeAsString();
   writeTopic(controlGraph, CONTROL_GRAPH_TOPIC, writeTime);
   const auto controlPath =
-      MakePathSceneUpdate(scene.plannedPaths[1], writeTime).SerializeAsString();
+      MakePathSceneUpdate(scene.controlSolution, writeTime).SerializeAsString();
   writeTopic(controlPath, CONTROL_PATH_TOPIC, writeTime);
 
   /// GRID
@@ -138,8 +135,6 @@ std::cout << "mcap write" << std::endl;
   writeTopic(scenario, SCENARIO_TOPIC, writeTime);
 
   frameIndex++;
-
-std::cout << "mcap write end" << std::endl;
 
   return;
 }
@@ -382,6 +377,21 @@ foxglove::SceneUpdate MakeScenarioSceneUpdate(const Scenario &scenario,
 
   return sceneUpdate;
 }
+
+foxglove::SceneUpdate MakePathSceneUpdate(const std::vector<Pose>& poses, int64_t writeTime) {
+  Path path;
+  for (const auto& pose: poses) {
+    path.emplace_back(pose.position.x(), pose.position.y());
+  }
+  return MakePathSceneUpdate(path, writeTime);
+};
+foxglove::SceneUpdate MakePathSceneUpdate(const std::vector<HookedPose>& poses, int64_t writeTime) {
+  Path path;
+  for (const auto& pose: poses) {
+    path.emplace_back(pose.position.x(), pose.position.y());
+  }
+  return MakePathSceneUpdate(path, writeTime);
+};
 
 foxglove::SceneUpdate MakePathSceneUpdate(const Path &path, int64_t writeTime) {
   foxglove::SceneUpdate sceneUpdate;

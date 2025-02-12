@@ -13,11 +13,13 @@ namespace planning {
 struct Scene {
   Footprints revoy;
   HookedPose revoyPose;
-  std::vector<Path> plannedPaths;
+  std::vector<Pose> coarseSolution;
+  std::vector<HookedPose> controlSolution;
   Scenario scenario;
   Footprints visibleEntities;
   std::shared_ptr<OccupancyGrid> grid;
-  std::vector<Graph> graphs;
+  Graph coarseGraph;
+  Graph controlGraph;
 };
 
 class McapWrapper {

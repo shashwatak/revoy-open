@@ -82,7 +82,7 @@ Plan GetNextPlan(const Perception *perception) {
               offsetX, offsetY);
   planner->plan(START, GOAL, grid);
 
-  const Controls controls = planner->getControls();
+  const Controls controls = planner->getControlPlanner()->getControls();
   const auto &grid = planner->getLastOccupancyGrid();
 
   Plan plan = {.setSpeed = controls.speed,

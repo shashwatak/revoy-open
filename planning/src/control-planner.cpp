@@ -96,11 +96,11 @@ void ControlPlanner::plan(const HookedPose &start_, const HookedPose &goal_,
       solved != ompl::base::PlannerStatus::APPROXIMATE_SOLUTION) {
     std::cout << "no control solution: " << solved << std::endl;
   } else {
-    std::cout << "control solution: " << solved << std::endl;
+  //   std::cout << "control solution: " << solved << std::endl;
     auto &solution = setup_.getSolutionPath();
     for (const auto baseState : solution.getStates()) {
       const auto state = baseState->as<RevoySpace::StateType>();
-      path_.push_back({state->getX(), state->getY()});
+      path_.push_back({{state->getX(), state->getY()}, state->getYaw()});
     }
 
     if (solution.getStateCount() > 0) {
@@ -117,7 +117,7 @@ void ControlPlanner::plan(const HookedPose &start_, const HookedPose &goal_,
   setup_.clear();
 }
 
-const Path &ControlPlanner::getLastSolution() const { return path_; };
+const std::vector<HookedPose> &ControlPlanner::getLastSolution() const { return path_; };
 const Controls &ControlPlanner::getControls() const { return controls_; }
 const std::vector<Controls> &ControlPlanner::getControlsVector() const { return controlsVector_; }
 const Graph &ControlPlanner::getLastGraph() const { return graph_; }

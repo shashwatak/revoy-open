@@ -23,7 +23,7 @@ public:
             std::shared_ptr<OccupancyGrid> grid);
 
   /// getters used for output / debug
-  const Path &getLastSolution() const;
+  const std::vector<Pose> &getLastSolution() const;
   const Graph &getLastGraph() const;
 
   /// ompl hooks that we define, pass data / query the StateSpace
@@ -32,7 +32,7 @@ public:
 private:
   /// Params, Inputs, Outputs
   Bounds bounds_ = {};
-  Path path_ = {};
+  std::vector<Pose> path_ = {};
   Graph graph_ = {};
 
   /// OMPL stuff

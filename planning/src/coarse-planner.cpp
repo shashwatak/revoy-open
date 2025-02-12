@@ -74,11 +74,11 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
       solved != ompl::base::PlannerStatus::APPROXIMATE_SOLUTION) {
     std::cout << "no coarse solution: " << solved << std::endl;
   } else {
-    std::cout << "coarse solution: " << solved << std::endl;
+    // std::cout << "coarse solution: " << solved << std::endl;
     auto &solution = setup_.getSolutionPath();
     for (const auto baseState : solution.getStates()) {
       const auto state = baseState->as<Flatland::StateType>();
-      path_.push_back({state->getX(), state->getY()});
+      path_.push_back({{state->getX(), state->getY()}, state->getYaw()});
     }
   }
 
@@ -86,7 +86,7 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
   setup_.clear();
 }
 
-const Path &CoarsePlanner::getLastSolution() const { return path_; };
+const std::vector<Pose> &CoarsePlanner::getLastSolution() const { return path_; };
 const Graph &CoarsePlanner::getLastGraph() const { return graph_; }
 
 CoarsePlanner::ValidityChecker::ValidityChecker(

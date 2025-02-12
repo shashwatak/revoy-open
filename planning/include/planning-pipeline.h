@@ -16,12 +16,11 @@ public:
   PlanningPipeline(const Bounds &bounds, const BodyParams &bodyParams);
 
   /// getters used for output / debug
-  const std::vector<Path> &getLastSolutions() const;
-  const std::vector<Graph> &getLastGraphs() const;
   const std::shared_ptr<OccupancyGrid> &getLastOccupancyGrid() const;
 
-  /// out to controls
-  const Controls &getControls() const;
+  /// get const planners, to access their debug info
+  const std::shared_ptr<CoarsePlanner> getCoarsePlanner() const;
+  const std::shared_ptr<ControlPlanner> getControlPlanner() const;
 
   void plan(const HookedPose &start, const HookedPose &goal,
             std::shared_ptr<OccupancyGrid> grid
@@ -31,9 +30,6 @@ public:
 private:
   /// Params, Inputs, Outputs
   Bounds bounds_ = {};
-  std::vector<Path> paths_ = {};
-  std::vector<Graph> graphs_ = {};
-  Controls controls_ = {};
 
   /// Obstacles
   std::shared_ptr<OccupancyGrid> grid_;

@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 
     // for this test, instantly apply speed / steer to actual speed /
     // steer
-    const Controls controls = simpl->getPlanningPipeline().getControls();
+    const Controls controls = simpl->getPlanningPipeline().getControlPlanner()->getControls();
 
     actualSpeed = controls.speed;
     actualSteer = controls.steer;

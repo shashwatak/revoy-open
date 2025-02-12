@@ -23,7 +23,7 @@ public:
             std::shared_ptr<OccupancyGrid> grid);
 
   /// getters used for output / debug
-  const Path &getLastSolution() const;
+  const std::vector<HookedPose> &getLastSolution() const;
   const Graph &getLastGraph() const;
   const Controls &getControls() const;
   const std::vector<Controls> &getControlsVector() const;
@@ -35,7 +35,7 @@ public:
 private:
   /// Params, Inputs, Outputs
   Bounds bounds_ = {};
-  Path path_ = {};
+  std::vector<HookedPose> path_ = {};
   Graph graph_ = {};
   Controls controls_ = {};
   std::vector<Controls> controlsVector_ = {};
