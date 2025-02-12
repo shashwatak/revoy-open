@@ -39,6 +39,6 @@ private:
   std::vector<Footprint> footprints_;
 
   /// Planners
-  std::shared_ptr<ProximityPlanner> proximityPlanner_;
+  std::shared_ptr<CoarsePlanner> coarsePlanner_;
 };
 } // namespace planning

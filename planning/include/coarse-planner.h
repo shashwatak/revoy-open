@@ -11,11 +11,12 @@
 
 namespace planning {
 
-/// Plans to move forward slowly unless an obstacle is in the way.
-class ProximityPlanner {
+/// Makes a coarse plan towards the Goal, not guaranteed to actually be
+/// followable. Use the output of this to guide a more high-dimensional search.
+class CoarsePlanner {
 public:
-  ProximityPlanner() = delete;
-  ProximityPlanner(const Bounds &bounds, const BodyParams &bodyParams);
+  CoarsePlanner() = delete;
+  CoarsePlanner(const Bounds &bounds, const BodyParams &bodyParams);
 
   /// Completes ompl setup, calls ompl solve
   void plan(const HookedPose &start, const HookedPose &goal,

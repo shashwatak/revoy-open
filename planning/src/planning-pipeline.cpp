@@ -4,8 +4,8 @@ namespace planning {
 
 PlanningPipeline::PlanningPipeline(const Bounds &bounds,
                                    const BodyParams &bodyParams)
-    : bounds_(bounds), proximityPlanner_(std::make_shared<ProximityPlanner>(
-                           bounds, bodyParams)) {};
+    : bounds_(bounds),
+      coarsePlanner_(std::make_shared<CoarsePlanner>(bounds, bodyParams)) {};
 
 void PlanningPipeline::plan(const HookedPose &start, const HookedPose &goal,
                             std::shared_ptr<OccupancyGrid> grid) {
@@ -15,11 +15,11 @@ void PlanningPipeline::plan(const HookedPose &start, const HookedPose &goal,
   controls_ = {};
   grid_ = grid;
 
-  proximityPlanner_->plan(start, goal, grid);
+  coarsePlanner_->plan(start, goal, grid);
 
-  paths_.push_back(proximityPlanner_->getLastSolution());
-  graphs_.push_back(proximityPlanner_->getLastGraph());
-  controls_ = proximityPlanner_->getControls();
+  paths_.push_back(coarsePlanner_->getLastSolution());
+  graphs_.push_back(coarsePlanner_->getLastGraph());
+  controls_ = coarsePlanner_->getControls();
 }
 
 const std::vector<Path> &PlanningPipeline::getLastSolutions() const {

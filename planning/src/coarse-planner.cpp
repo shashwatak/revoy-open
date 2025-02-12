@@ -17,8 +17,7 @@ AllocOBValidStateSampler(const ompl::base::SpaceInformation *si) {
   return std::make_shared<ompl::base::ObstacleBasedValidStateSampler>(si);
 }
 
-ProximityPlanner::ProximityPlanner(const Bounds &bounds,
-                                   const BodyParams &bodyParams)
+CoarsePlanner::CoarsePlanner(const Bounds &bounds, const BodyParams &bodyParams)
     : bounds_(bounds), space_(std::make_shared<Flatland>(bounds)),
       setup_(space_), validityChecker_(std::make_shared<ValidityChecker>(
                           setup_.getSpaceInformation(), bodyParams)) {
@@ -44,8 +43,8 @@ ProximityPlanner::ProximityPlanner(const Bounds &bounds,
   space_->setBounds(rbounds);
 };
 
-void ProximityPlanner::plan(const HookedPose &start_, const HookedPose &goal_,
-                            std::shared_ptr<OccupancyGrid> grid) {
+void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
+                         std::shared_ptr<OccupancyGrid> grid) {
 
   // create a start state
   ompl::base::ScopedState<Flatland> start(space_);
@@ -97,21 +96,21 @@ void ProximityPlanner::plan(const HookedPose &start_, const HookedPose &goal_,
   setup_.clear();
 }
 
-const Path &ProximityPlanner::getLastSolution() const { return path_; };
-const Controls &ProximityPlanner::getControls() const { return controls_; }
-const Graph &ProximityPlanner::getLastGraph() const { return graph_; }
+const Path &CoarsePlanner::getLastSolution() const { return path_; };
+const Controls &CoarsePlanner::getControls() const { return controls_; }
+const Graph &CoarsePlanner::getLastGraph() const { return graph_; }
 
-ProximityPlanner::ValidityChecker::ValidityChecker(
+CoarsePlanner::ValidityChecker::ValidityChecker(
     const ompl::base::SpaceInformationPtr &si, const BodyParams &bodyParams)
     : ompl::base::StateValidityChecker(si), bodyParams_(bodyParams) {}
 
-void ProximityPlanner::ValidityChecker::setOccupancyGrid(
+void CoarsePlanner::ValidityChecker::setOccupancyGrid(
     const std::shared_ptr<OccupancyGrid> grid, const Pose &pose) {
   grid_ = grid;
   currentPose_ = pose;
 }
 
-bool ProximityPlanner::ValidityChecker::isValid(
+bool CoarsePlanner::ValidityChecker::isValid(
     const ompl::base::State *state_) const {
   if (!grid_) {
     std::cout << "ERROR: no occupancy grid set, no validity check" << std::endl;
