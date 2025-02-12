@@ -52,14 +52,14 @@ Scenario MakeYardScenario() {
   scenario.name = "yard";
 
   const HookedPose start = {{0, 0}, 0, 0};
-  const HookedPose goal = {{30, 30}, std::numbers::pi, std::numbers::pi};
+  const HookedPose goal = {{20, 30}, std::numbers::pi*0.99, std::numbers::pi*0.99};
 
   const Entity walls_left = {{{15, 15}, 0},
                              {
-                                 {-10, -10},
-                                 {-10, 10},
-                                 {10, 10},
-                                 {10, -10},
+                                 {-7, -7},
+                                 {-7, 7},
+                                 {7, 7},
+                                 {7, -7},
                              }};
 
   scenario.entities.push_back(walls_left);
@@ -67,7 +67,9 @@ Scenario MakeYardScenario() {
   scenario.start = start;
   scenario.goal = goal;
 
-  scenario.timeParams.timeout = 1e6;
+  scenario.timeParams.timeout = 2e10;
+
+  scenario.bounds = {50, 50, -50, -50};
   return scenario;
 };
 

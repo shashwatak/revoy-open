@@ -1,6 +1,7 @@
 #pragma once
 
 #include "planning/coarse-planner.h"
+#include "planning/control-planner.h"
 
 namespace planning {
 
@@ -40,5 +41,6 @@ private:
 
   /// Planners
   std::shared_ptr<CoarsePlanner> coarsePlanner_;
+  std::shared_ptr<ControlPlanner> controlPlanner_;
 };
 } // namespace planning

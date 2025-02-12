@@ -12,19 +12,23 @@ MockRevoyEv::MockRevoyEv(HookedPose start) : hookedPose_(start) {};
 
 void MockRevoyEv::update(const Controls &controls, const Bounds &bounds,
                          double duration) {
-  const double travel = controls.speed * duration; /// K;
 
   double x = hookedPose_.position.x();
   double y = hookedPose_.position.y();
   double yaw = hookedPose_.yaw;
   double trailerYaw = hookedPose_.trailerYaw;
 
+  // integrate to try to make it more accurate
   static const double K = 100;
+  const double travel = controls.speed * duration / K;
+  /// hack todo fix
+  const BodyParams param;
+  
   for (int i = 0; i < K; i++) {
-    x += travel * cos(yaw) / K;
-    y += travel * sin(yaw) / K;
-    yaw += travel * tan(controls.steer) / K;
-    trailerYaw -= sin(trailerYaw - yaw) * duration / K;
+    x += travel * cos(yaw);
+    y += travel * sin(yaw);
+    yaw += (travel / param.revoyLength) * tan(controls.steer);
+    trailerYaw -= (travel / param.trailerLength) * sin(trailerYaw - yaw);
   }
 
   hookedPose_.position.x() = fmax(fmin(x, bounds.upperX), bounds.lowerX);

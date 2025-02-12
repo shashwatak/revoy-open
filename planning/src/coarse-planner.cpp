@@ -61,7 +61,6 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
   setup_.setStartAndGoalStates(start, goal, 1);
 
   path_.clear();
-  controls_ = {};
   grid_ = grid;
 
   const Pose &gridPose{{start->getX(), start->getY()}, start->getYaw()};
@@ -69,26 +68,17 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
 
   setup_.setup();
   // setup_.print();
-  ompl::base::PlannerStatus solved = setup_.solve(0.01);
+  ompl::base::PlannerStatus solved = setup_.solve(0.1);
 
   if (solved != ompl::base::PlannerStatus::EXACT_SOLUTION &&
       solved != ompl::base::PlannerStatus::APPROXIMATE_SOLUTION) {
-    std::cout << "no solution: " << solved << std::endl;
+    std::cout << "no coarse solution: " << solved << std::endl;
   } else {
-    std::cout << "solution: " << solved << std::endl;
+    std::cout << "coarse solution: " << solved << std::endl;
     auto &solution = setup_.getSolutionPath();
     for (const auto baseState : solution.getStates()) {
       const auto state = baseState->as<Flatland::StateType>();
       path_.push_back({state->getX(), state->getY()});
-    }
-
-    if (solution.getStateCount() > 0) {
-      // const auto ctrl =
-      //     solution.getControl(0)
-      //         ->as<ompl::control::DiscreteControlSpace::ControlType>();
-      // controls_.speed = ctrl->value;
-      // controls_.steer = 0;
-      // controls_.duration = solution.getControlDuration(0);
     }
   }
 
@@ -97,7 +87,6 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
 }
 
 const Path &CoarsePlanner::getLastSolution() const { return path_; };
-const Controls &CoarsePlanner::getControls() const { return controls_; }
 const Graph &CoarsePlanner::getLastGraph() const { return graph_; }
 
 CoarsePlanner::ValidityChecker::ValidityChecker(
@@ -120,20 +109,22 @@ bool CoarsePlanner::ValidityChecker::isValid(
   const auto *state = state_->as<Flatland::StateType>();
   bool isValid = si_->satisfiesBounds(state);
 
+  // const HookedPose pose = {
+  //     {state->getX(), state->getY()}, state->getYaw(), state->getTrailerYaw()};
+  // const Point point = ReverseTransformPoint(pose.position, currentPose_);
+  // isValid &= !grid_->isPointOccupied(point);
+
   const HookedPose pose = {
       {state->getX(), state->getY()}, state->getYaw(), state->getTrailerYaw()};
-  const Point point = ReverseTransformPoint(pose.position, currentPose_);
-  isValid &= !grid_->isPointOccupied(point);
+  const Footprints body = FootprintsFromPose(pose, bodyParams_);
 
-  // const Footprints body = FootprintsFromPose(pose, bodyParams_);
-
-  // /// put the footprint into the occupancy frame to check if its hitting
-  // /// anything
-  // for (const Footprint &part : body) {
-  //   const Footprint partInRevoyFrame =
-  //       ReverseTransformFootprint(part, currentPose_);
-  //   isValid &= !grid_->isFootprintOccupied(partInRevoyFrame);
-  // }
+  /// put the footprint into the occupancy frame to check if its hitting
+  /// anything
+  for (const Footprint &part : body) {
+    const Footprint partInRevoyFrame =
+        ReverseTransformFootprint(part, currentPose_);
+    isValid &= !grid_->isFootprintOccupied(partInRevoyFrame);
+  }
 
   return isValid;
 };

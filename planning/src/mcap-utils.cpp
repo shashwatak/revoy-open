@@ -45,9 +45,11 @@ foxglove::Grid MakeGrid(const std::shared_ptr<OccupancyGrid> &grid,
 
 const static std::string GRID_TOPIC = "occupancy";
 const static std::string ACTORS_TOPIC = "actors";
-const static std::string GRAPH_TOPIC = "search";
+const static std::string COARSE_GRAPH_TOPIC = "coarse-graph";
+const static std::string COARSE_PATH_TOPIC = "coarse-path";
+const static std::string CONTROL_GRAPH_TOPIC = "control-graph";
+const static std::string CONTROL_PATH_TOPIC = "control-path";
 const static std::string SCENARIO_TOPIC = "scenario";
-const static std::string PATH_TOPIC = "path";
 
 } // namespace
 
@@ -75,12 +77,22 @@ McapWrapper::McapWrapper(const std::string outputFilename) {
   addTopic("foxglove.SceneUpdate",
            revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
                .SerializeAsString(),
-           GRAPH_TOPIC);
+           COARSE_GRAPH_TOPIC);
 
   addTopic("foxglove.SceneUpdate",
            revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
                .SerializeAsString(),
-           PATH_TOPIC);
+           COARSE_PATH_TOPIC);
+
+  addTopic("foxglove.SceneUpdate",
+           revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
+               .SerializeAsString(),
+           CONTROL_GRAPH_TOPIC);
+
+  addTopic("foxglove.SceneUpdate",
+           revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
+               .SerializeAsString(),
+           CONTROL_PATH_TOPIC);
 
   addTopic("foxglove.SceneUpdate",
            revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
@@ -90,31 +102,44 @@ McapWrapper::McapWrapper(const std::string outputFilename) {
 
 void McapWrapper::write(const Scene &scene, int64_t writeTime) {
 
+std::cout << "mcap write" << std::endl;
+  
+  assert(scene.graphs.size() == 2);
+  assert(scene.plannedPaths.size() == 2);
+
   const auto actors =
       MakeActorSceneUpdate(scene, writeTime).SerializeAsString();
   writeTopic(actors, ACTORS_TOPIC, writeTime);
 
-  if (scene.graphs.size() > 0) {
-    const auto search =
-        MakeGraphSceneUpdate(scene.graphs[0], writeTime).SerializeAsString();
-    writeTopic(search, GRAPH_TOPIC, writeTime);
-  }
+  /// COARSE PLAN
+  const auto coarseGraph =
+      MakeGraphSceneUpdate(scene.graphs[0], writeTime).SerializeAsString();
+  writeTopic(coarseGraph, COARSE_GRAPH_TOPIC, writeTime);
+  const auto coarsePath =
+      MakePathSceneUpdate(scene.plannedPaths[0], writeTime).SerializeAsString();
+  writeTopic(coarsePath, COARSE_PATH_TOPIC, writeTime);
 
-  if (scene.plannedPaths.size() > 0) {
-    const auto path = MakePathSceneUpdate(scene.plannedPaths[0], writeTime)
-                          .SerializeAsString();
-    writeTopic(path, PATH_TOPIC, writeTime);
-  }
+  // /// CONTROL PLAN
+  const auto controlGraph =
+      MakeGraphSceneUpdate(scene.graphs[1], writeTime).SerializeAsString();
+  writeTopic(controlGraph, CONTROL_GRAPH_TOPIC, writeTime);
+  const auto controlPath =
+      MakePathSceneUpdate(scene.plannedPaths[1], writeTime).SerializeAsString();
+  writeTopic(controlPath, CONTROL_PATH_TOPIC, writeTime);
 
+  /// GRID
   const auto grid =
       MakeGrid(scene.grid, scene.revoyPose, writeTime).SerializeAsString();
   writeTopic(grid, GRID_TOPIC, writeTime);
 
+  /// SCENARIO
   const auto scenario =
       MakeScenarioSceneUpdate(scene.scenario, writeTime).SerializeAsString();
   writeTopic(scenario, SCENARIO_TOPIC, writeTime);
 
   frameIndex++;
+
+std::cout << "mcap write end" << std::endl;
 
   return;
 }

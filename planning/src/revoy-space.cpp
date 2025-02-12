@@ -1,4 +1,5 @@
 #include "planning/revoy-space.h"
+#include "planning/include/types.h"
 
 #include <ompl/tools/config/MagicConstants.h>
 
@@ -59,11 +60,15 @@ void RevoySpace::Propagate(const RevoySpace::StateType *state,
   // integrate to try to make it more accurate
   static const double K = 100;
   const double travel = speed * duration / K;
+
+  /// hack todo fix
+  const BodyParams param;
+  
   for (int i = 0; i < K; i++) {
     x += travel * cos(yaw);
     y += travel * sin(yaw);
-    yaw += travel * tan(steer);
-    trailerYaw -= sin(trailerYaw - yaw) * duration / K;
+    yaw += (travel / param.revoyLength) * tan(steer);
+    trailerYaw -= (travel / param.trailerLength) * sin(trailerYaw - yaw);
   }
 
   result->setXY(x, y);

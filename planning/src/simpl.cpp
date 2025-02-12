@@ -11,9 +11,6 @@
 
 namespace planning {
 
-static const std::shared_ptr<OccupancyGrid>
-FootprintsToOccupancyGrid(const Footprints &footprints, const HookedPose &pose);
-
 Simpl::Simpl(Scenario scenario)
     : scenario_(scenario), revoyEv_(scenario_.start),
       planningPipeline_(scenario_.bounds, scenario_.bodyParams) {};
