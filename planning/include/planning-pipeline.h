@@ -1,6 +1,6 @@
 #pragma once
 
-#include "planning/proximity-planner.h"
+#include "planning/coarse-planner.h"
 
 namespace planning {
 

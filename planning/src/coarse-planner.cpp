@@ -1,4 +1,4 @@
-#include "planning/proximity-planner.h"
+#include "planning/coarse-planner.h"
 
 #include "planning/fill-graph.h"
 #include "planning/footprint-transform.h"
