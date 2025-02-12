@@ -144,7 +144,7 @@ TEST_CASE("test obstacle scenario parameterized direction and distance") {
 
         // for this test, instantly apply speed / steer to actual speed /
         // steer
-        const Controls controls = simpl->getProximityPlanner().getControls();
+        const Controls controls = simpl->getPlanningPipeline().getControls();
 
         actualSpeed = controls.speed;
         actualSteer = controls.steer;

@@ -100,10 +100,6 @@ void ProximityPlanner::plan(const HookedPose &start_, const HookedPose &goal_,
 const Path &ProximityPlanner::getLastSolution() const { return path_; };
 const Controls &ProximityPlanner::getControls() const { return controls_; }
 const Graph &ProximityPlanner::getLastGraph() const { return graph_; }
-const std::shared_ptr<OccupancyGrid> &
-ProximityPlanner::getLastOccupancyGrid() const {
-  return grid_;
-}
 
 ProximityPlanner::ValidityChecker::ValidityChecker(
     const ompl::base::SpaceInformationPtr &si, const BodyParams &bodyParams)

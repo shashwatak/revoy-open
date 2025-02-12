@@ -33,160 +33,119 @@ Eigen::Quaterniond MakeQuaternion(double angle);
 
 /// foxglove proto helpers
 foxglove::SceneUpdate MakeActorSceneUpdate(const Scene &scene, int64_t time);
-foxglove::SceneUpdate MakeSearchSceneUpdate(const Scene &scene, int64_t time);
-foxglove::SceneUpdate MakePathSceneUpdate(const Scene &scene, int64_t time);
+foxglove::SceneUpdate MakeGraphSceneUpdate(const Graph &graph, int64_t time);
+foxglove::SceneUpdate MakePathSceneUpdate(const Path &path, int64_t time);
+foxglove::SceneUpdate MakeScenarioSceneUpdate(const Scenario &scenario,
+                                              double writeTime);
 foxglove::LinePrimitive MakePath(const Path &path);
 foxglove::LinePrimitive MakeFootprint(const Footprint &footprint);
 foxglove::ArrowPrimitive MakeArrowPrimitive(const Pose &pose);
 foxglove::Grid MakeGrid(const std::shared_ptr<OccupancyGrid> &grid,
                         const HookedPose &revoyPose, int64_t writeTime);
-foxglove::SceneEntity MakeGraph(const Graph &graph, int64_t writeTime);
+
+const static std::string GRID_TOPIC = "occupancy";
+const static std::string ACTORS_TOPIC = "actors";
+const static std::string GRAPH_TOPIC = "search";
+const static std::string SCENARIO_TOPIC = "scenario";
+const static std::string PATH_TOPIC = "path";
 
 } // namespace
-
-namespace {}
 
 McapWrapper::McapWrapper(const std::string outputFilename) {
 
   auto options = mcap::McapWriterOptions("");
   const auto res = writer.open(outputFilename, options);
+
   if (!res.ok()) {
     std::cerr << "Failed to open " << outputFilename
               << " for writing: " << res.message << std::endl;
     exit(1);
   }
 
-  {
-    mcap::Schema schema(
-        "foxglove.Grid", "protobuf",
-        revoy::BuildFileDescriptorSet(foxglove::Grid::descriptor())
-            .SerializeAsString());
-    writer.addSchema(schema);
+  addTopic("foxglove.Grid",
+           revoy::BuildFileDescriptorSet(foxglove::Grid::descriptor())
+               .SerializeAsString(),
+           GRID_TOPIC);
 
-    mcap::Channel channel("occupancy", "protobuf", schema.id);
-    writer.addChannel(channel);
-    channelIds.insert({std::string("occupancy"), channel.id});
-  }
+  addTopic("foxglove.SceneUpdate",
+           revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
+               .SerializeAsString(),
+           ACTORS_TOPIC);
 
-  {
-    mcap::Schema schema(
-        "foxglove.SceneUpdate", "protobuf",
-        revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
-            .SerializeAsString());
-    writer.addSchema(schema);
+  addTopic("foxglove.SceneUpdate",
+           revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
+               .SerializeAsString(),
+           GRAPH_TOPIC);
 
-    mcap::Channel channel("actors", "protobuf", schema.id);
-    writer.addChannel(channel);
-    channelIds.insert({std::string("actors"), channel.id});
-  }
-  {
-    mcap::Schema schema(
-        "foxglove.SceneUpdate", "protobuf",
-        revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
-            .SerializeAsString());
-    writer.addSchema(schema);
+  addTopic("foxglove.SceneUpdate",
+           revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
+               .SerializeAsString(),
+           PATH_TOPIC);
 
-    mcap::Channel channel("search", "protobuf", schema.id);
-    writer.addChannel(channel);
-    channelIds.insert({std::string("search"), channel.id});
-  }
-  {
-    mcap::Schema schema(
-        "foxglove.SceneUpdate", "protobuf",
-        revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
-            .SerializeAsString());
-    writer.addSchema(schema);
-
-    mcap::Channel channel("path", "protobuf", schema.id);
-    writer.addChannel(channel);
-    channelIds.insert({std::string("path"), channel.id});
-  }
+  addTopic("foxglove.SceneUpdate",
+           revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
+               .SerializeAsString(),
+           SCENARIO_TOPIC);
 }
 
 void McapWrapper::write(const Scene &scene, int64_t writeTime) {
 
-  const foxglove::SceneUpdate actorScene =
-      MakeActorSceneUpdate(scene, writeTime);
-  {
-    std::string serialized = actorScene.SerializeAsString();
-    mcap::Message msg;
-    msg.channelId = channelIds.at(std::string("actors"));
-    msg.sequence = static_cast<uint32_t>(frameIndex);
-    // i guess its nanos here?
-    msg.publishTime =
-        static_cast<uint64_t>(writeTime) * static_cast<int64_t>(1e3);
-    msg.logTime = static_cast<uint64_t>(writeTime) * static_cast<int64_t>(1e3);
-    msg.data = reinterpret_cast<const std::byte *>(serialized.data());
-    msg.dataSize = serialized.size();
-    const auto res = writer.write(msg);
-    if (!res.ok()) {
-      std::cerr << "Failed to write message: " << res.message << "\n";
-      writer.terminate();
-      return;
-    }
-  }
-  const foxglove::SceneUpdate searchScene =
-      MakeSearchSceneUpdate(scene, writeTime);
-  {
-    std::string serialized = searchScene.SerializeAsString();
-    mcap::Message msg;
-    msg.channelId = channelIds.at(std::string("search"));
-    msg.sequence = static_cast<uint32_t>(frameIndex);
-    // i guess its nanos here?
-    msg.publishTime =
-        static_cast<uint64_t>(writeTime) * static_cast<int64_t>(1e3);
-    msg.logTime = static_cast<uint64_t>(writeTime) * static_cast<int64_t>(1e3);
-    msg.data = reinterpret_cast<const std::byte *>(serialized.data());
-    msg.dataSize = serialized.size();
-    const auto res = writer.write(msg);
-    if (!res.ok()) {
-      std::cerr << "Failed to write message: " << res.message << "\n";
-      writer.terminate();
-      return;
-    }
-  }
-  const foxglove::SceneUpdate pathScene = MakePathSceneUpdate(scene, writeTime);
-  {
-    std::string serialized = pathScene.SerializeAsString();
-    mcap::Message msg;
-    msg.channelId = channelIds.at(std::string("path"));
-    msg.sequence = static_cast<uint32_t>(frameIndex);
-    // i guess its nanos here?
-    msg.publishTime =
-        static_cast<uint64_t>(writeTime) * static_cast<int64_t>(1e3);
-    msg.logTime = static_cast<uint64_t>(writeTime) * static_cast<int64_t>(1e3);
-    msg.data = reinterpret_cast<const std::byte *>(serialized.data());
-    msg.dataSize = serialized.size();
-    const auto res = writer.write(msg);
-    if (!res.ok()) {
-      std::cerr << "Failed to write message: " << res.message << "\n";
-      writer.terminate();
-      return;
-    }
-  }
-  {
+  const auto actors =
+      MakeActorSceneUpdate(scene, writeTime).SerializeAsString();
+  writeTopic(actors, ACTORS_TOPIC, writeTime);
 
-    std::string serialized =
-        MakeGrid(scene.grid, scene.revoyPose, writeTime).SerializeAsString();
-    mcap::Message msg;
-    msg.channelId = channelIds.at(std::string("occupancy"));
-    msg.sequence = static_cast<uint32_t>(frameIndex);
-    msg.publishTime =
-        static_cast<uint64_t>(writeTime) * static_cast<int64_t>(1e3);
-    msg.logTime = static_cast<uint64_t>(writeTime) * static_cast<int64_t>(1e3);
-    msg.data = reinterpret_cast<const std::byte *>(serialized.data());
-    msg.dataSize = serialized.size();
-    const auto res = writer.write(msg);
-    if (!res.ok()) {
-      std::cerr << "Failed to write message: " << res.message << "\n";
-      writer.terminate();
-      return;
-    }
+  if (scene.graphs.size() > 0) {
+    const auto search =
+        MakeGraphSceneUpdate(scene.graphs[0], writeTime).SerializeAsString();
+    writeTopic(search, GRAPH_TOPIC, writeTime);
   }
+
+  if (scene.plannedPaths.size() > 0) {
+    const auto path = MakePathSceneUpdate(scene.plannedPaths[0], writeTime)
+                          .SerializeAsString();
+    writeTopic(path, PATH_TOPIC, writeTime);
+  }
+
+  const auto grid =
+      MakeGrid(scene.grid, scene.revoyPose, writeTime).SerializeAsString();
+  writeTopic(grid, GRID_TOPIC, writeTime);
+
+  const auto scenario =
+      MakeScenarioSceneUpdate(scene.scenario, writeTime).SerializeAsString();
+  writeTopic(scenario, SCENARIO_TOPIC, writeTime);
 
   frameIndex++;
 
   return;
+}
+
+void McapWrapper::addTopic(const std::string &type, const std::string &desc,
+                           const std::string &topic) {
+  mcap::Schema schema(type, "protobuf", desc);
+  writer.addSchema(schema);
+
+  mcap::Channel channel(topic, "protobuf", schema.id);
+  writer.addChannel(channel);
+  channelIds.insert({std::string(topic), channel.id});
+};
+
+void McapWrapper::writeTopic(const std::string &serialized,
+                             const std::string &topic, double writeTime) {
+
+  mcap::Message msg;
+  msg.channelId = channelIds.at(topic);
+  msg.sequence = static_cast<uint32_t>(frameIndex);
+  msg.publishTime =
+      static_cast<uint64_t>(writeTime) * static_cast<int64_t>(1e3);
+  msg.logTime = static_cast<uint64_t>(writeTime) * static_cast<int64_t>(1e3);
+  msg.data = reinterpret_cast<const std::byte *>(serialized.data());
+  msg.dataSize = serialized.size();
+  const auto res = writer.write(msg);
+  if (!res.ok()) {
+    std::cerr << "Failed to write message: " << res.message << "\n";
+    writer.terminate();
+    return;
+  }
 }
 
 McapWrapper::~McapWrapper() { writer.close(); }
@@ -296,34 +255,76 @@ foxglove::SceneUpdate MakeActorSceneUpdate(const Scene &scene,
   return sceneUpdate;
 }
 
-foxglove::SceneUpdate MakeSearchSceneUpdate(const Scene &scene,
-                                            int64_t writeTime) {
+foxglove::SceneUpdate MakeGraphSceneUpdate(const Graph &graph,
+                                           int64_t writeTime) {
   foxglove::SceneUpdate sceneUpdate;
-  sceneUpdate.mutable_entities()->Add(MakeGraph(scene.graph, writeTime));
+
+  foxglove::SceneEntity fgGraph;
+
+  fgGraph.set_frame_id("fixed");
+  fgGraph.set_id("graph");
+  fgGraph.mutable_timestamp()->set_seconds(writeTime);
+
+  foxglove::LinePrimitive nodePoints;
+  nodePoints.set_type(foxglove::LinePrimitive::LINE_LIST);
+  nodePoints.set_thickness(0.125);
+  nodePoints.set_scale_invariant(false);
+
+  for (const auto &node : graph.nodes) {
+    foxglove::Point3 fgPoint;
+    fgPoint.set_x(node.x());
+    fgPoint.set_y(node.y());
+    fgPoint.set_z(0.0);
+    nodePoints.mutable_points()->Add(std::move(fgPoint));
+  }
+
+  nodePoints.mutable_color()->set_r(1.0);
+  nodePoints.mutable_color()->set_g(1.0);
+  nodePoints.mutable_color()->set_b(1.0);
+  nodePoints.mutable_color()->set_a(0.3);
+
+  fgGraph.mutable_lines()->Add(std::move(nodePoints));
+
+  for (const auto &[start_idx, end_idx] : graph.edges) {
+    foxglove::LinePrimitive edgeLine;
+    edgeLine.set_type(foxglove::LinePrimitive::LINE_LIST);
+    edgeLine.set_thickness(0.01);
+    edgeLine.set_scale_invariant(false);
+
+    foxglove::Point3 startPoint;
+    startPoint.set_x(graph.nodes[start_idx].x());
+    startPoint.set_y(graph.nodes[start_idx].y());
+    startPoint.set_z(0.0);
+    edgeLine.mutable_points()->Add(std::move(startPoint));
+
+    foxglove::Point3 endPoint;
+    endPoint.set_x(graph.nodes[end_idx].x());
+    endPoint.set_y(graph.nodes[end_idx].y());
+    endPoint.set_z(0.0);
+    edgeLine.mutable_points()->Add(std::move(endPoint));
+
+    edgeLine.mutable_color()->set_r(1.0);
+    edgeLine.mutable_color()->set_g(1.0);
+    edgeLine.mutable_color()->set_b(1.0);
+    edgeLine.mutable_color()->set_a(1.0);
+
+    fgGraph.mutable_lines()->Add(std::move(edgeLine));
+  }
+
+  sceneUpdate.mutable_entities()->Add(std::move(fgGraph));
+
   return sceneUpdate;
 }
 
-foxglove::SceneUpdate MakePathSceneUpdate(const Scene &scene,
-                                          int64_t writeTime) {
+foxglove::SceneUpdate MakeScenarioSceneUpdate(const Scenario &scenario,
+                                              double writeTime) {
   foxglove::SceneUpdate sceneUpdate;
-
-  foxglove::SceneEntity fgPath;
-  fgPath.set_frame_id("fixed");
-  fgPath.set_id("path");
-  fgPath.mutable_timestamp()->set_seconds(writeTime);
-  fgPath.mutable_lines()->Add(MakePath(scene.plannedPath));
-  fgPath.mutable_lines()->Mutable(0)->mutable_color()->set_r(1);
-  fgPath.mutable_lines()->Mutable(0)->mutable_color()->set_g(1);
-  fgPath.mutable_lines()->Mutable(0)->mutable_color()->set_b(0);
-  fgPath.mutable_lines()->Mutable(0)->mutable_color()->set_a(1);
-  sceneUpdate.mutable_entities()->Add(std::move(fgPath));
-
   const std::vector<Point> limits{
-      {scene.scenario.bounds.upperX, scene.scenario.bounds.upperY},
-      {scene.scenario.bounds.lowerX, scene.scenario.bounds.upperY},
-      {scene.scenario.bounds.lowerX, scene.scenario.bounds.lowerY},
-      {scene.scenario.bounds.upperX, scene.scenario.bounds.lowerY},
-      {scene.scenario.bounds.upperX, scene.scenario.bounds.upperY},
+      {scenario.bounds.upperX, scenario.bounds.upperY},
+      {scenario.bounds.lowerX, scenario.bounds.upperY},
+      {scenario.bounds.lowerX, scenario.bounds.lowerY},
+      {scenario.bounds.upperX, scenario.bounds.lowerY},
+      {scenario.bounds.upperX, scenario.bounds.upperY},
   };
 
   foxglove::SceneEntity fgLimits;
@@ -338,8 +339,8 @@ foxglove::SceneUpdate MakePathSceneUpdate(const Scene &scene,
   fgStart.set_frame_id("fixed");
   fgStart.set_id("start");
   fgStart.mutable_timestamp()->set_seconds(writeTime);
-  fgStart.mutable_arrows()->Add(MakeArrowPrimitive(
-      {scene.scenario.start.position, scene.scenario.start.yaw}));
+  fgStart.mutable_arrows()->Add(
+      MakeArrowPrimitive({scenario.start.position, scenario.start.yaw}));
   fgStart.mutable_arrows()->Mutable(0)->mutable_color()->set_b(1);
   fgStart.mutable_arrows()->Mutable(0)->mutable_color()->set_a(0.5);
   sceneUpdate.mutable_entities()->Add(std::move(fgStart));
@@ -348,11 +349,28 @@ foxglove::SceneUpdate MakePathSceneUpdate(const Scene &scene,
   fgGoal.set_frame_id("fixed");
   fgGoal.set_id("goal");
   fgGoal.mutable_timestamp()->set_seconds(writeTime);
-  fgGoal.mutable_arrows()->Add(MakeArrowPrimitive(
-      {scene.scenario.goal.position, scene.scenario.goal.yaw}));
+  fgGoal.mutable_arrows()->Add(
+      MakeArrowPrimitive({scenario.goal.position, scenario.goal.yaw}));
   fgGoal.mutable_arrows()->Mutable(0)->mutable_color()->set_g(1);
   fgGoal.mutable_arrows()->Mutable(0)->mutable_color()->set_a(0.5);
   sceneUpdate.mutable_entities()->Add(std::move(fgGoal));
+
+  return sceneUpdate;
+}
+
+foxglove::SceneUpdate MakePathSceneUpdate(const Path &path, int64_t writeTime) {
+  foxglove::SceneUpdate sceneUpdate;
+
+  foxglove::SceneEntity fgPath;
+  fgPath.set_frame_id("fixed");
+  fgPath.set_id("path");
+  fgPath.mutable_timestamp()->set_seconds(writeTime);
+  fgPath.mutable_lines()->Add(MakePath(path));
+  fgPath.mutable_lines()->Mutable(0)->mutable_color()->set_r(1);
+  fgPath.mutable_lines()->Mutable(0)->mutable_color()->set_g(1);
+  fgPath.mutable_lines()->Mutable(0)->mutable_color()->set_b(0);
+  fgPath.mutable_lines()->Mutable(0)->mutable_color()->set_a(1);
+  sceneUpdate.mutable_entities()->Add(std::move(fgPath));
 
   return sceneUpdate;
 }
@@ -442,61 +460,6 @@ foxglove::Grid MakeGrid(const std::shared_ptr<OccupancyGrid> &grid,
   fgGrid.mutable_fields()->Add(std::move(fgFields));
   fgGrid.set_data(grid->fillData());
   return fgGrid;
-}
-
-foxglove::SceneEntity MakeGraph(const Graph &graph, int64_t writeTime) {
-  foxglove::SceneEntity fgGraph;
-  fgGraph.set_frame_id("fixed");
-  fgGraph.set_id("graph");
-  fgGraph.mutable_timestamp()->set_seconds(writeTime);
-
-  foxglove::LinePrimitive nodePoints;
-  nodePoints.set_type(foxglove::LinePrimitive::LINE_LIST);
-  nodePoints.set_thickness(0.125);
-  nodePoints.set_scale_invariant(false);
-
-  for (const auto &node : graph.nodes) {
-    foxglove::Point3 fgPoint;
-    fgPoint.set_x(node.x());
-    fgPoint.set_y(node.y());
-    fgPoint.set_z(0.0);
-    nodePoints.mutable_points()->Add(std::move(fgPoint));
-  }
-
-  nodePoints.mutable_color()->set_r(1.0);
-  nodePoints.mutable_color()->set_g(1.0);
-  nodePoints.mutable_color()->set_b(1.0);
-  nodePoints.mutable_color()->set_a(0.3);
-
-  fgGraph.mutable_lines()->Add(std::move(nodePoints));
-
-  for (const auto &[start_idx, end_idx] : graph.edges) {
-    foxglove::LinePrimitive edgeLine;
-    edgeLine.set_type(foxglove::LinePrimitive::LINE_LIST);
-    edgeLine.set_thickness(0.01);
-    edgeLine.set_scale_invariant(false);
-
-    foxglove::Point3 startPoint;
-    startPoint.set_x(graph.nodes[start_idx].x());
-    startPoint.set_y(graph.nodes[start_idx].y());
-    startPoint.set_z(0.0);
-    edgeLine.mutable_points()->Add(std::move(startPoint));
-
-    foxglove::Point3 endPoint;
-    endPoint.set_x(graph.nodes[end_idx].x());
-    endPoint.set_y(graph.nodes[end_idx].y());
-    endPoint.set_z(0.0);
-    edgeLine.mutable_points()->Add(std::move(endPoint));
-
-    edgeLine.mutable_color()->set_r(1.0);
-    edgeLine.mutable_color()->set_g(1.0);
-    edgeLine.mutable_color()->set_b(1.0);
-    edgeLine.mutable_color()->set_a(1.0);
-
-    fgGraph.mutable_lines()->Add(std::move(edgeLine));
-  }
-
-  return fgGraph;
 }
 
 } // namespace

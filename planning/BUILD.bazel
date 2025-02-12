@@ -2,10 +2,12 @@ cc_library(
     name = "planning",
     srcs = [
         "src/planning.cpp",
+        "src/planning-pipeline.cpp",
         "src/proximity-planner.cpp",
     ],
     hdrs = [
         "include/planning.h",
+        "include/planning-pipeline.h",
         "include/proximity-planner.h",
     ],
     copts = [

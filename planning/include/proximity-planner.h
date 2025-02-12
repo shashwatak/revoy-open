@@ -25,7 +25,6 @@ public:
   const Path &getLastSolution() const;
   const Graph &getLastGraph() const;
   const Controls &getControls() const;
-  const std::shared_ptr<OccupancyGrid> &getLastOccupancyGrid() const;
 
   /// ompl hooks that we define, pass data / query the StateSpace
   class ValidityChecker;

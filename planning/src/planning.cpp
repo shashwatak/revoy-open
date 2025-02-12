@@ -1,7 +1,7 @@
 #include "planning/planning.h"
 
 #include "planning/occupancy-grid.h"
-#include "planning/proximity-planner.h"
+#include "planning/planning-pipeline.h"
 #include "planning/types.h"
 
 #include <bitset>
@@ -15,7 +15,7 @@
 
 using namespace planning;
 
-static std::unique_ptr<ProximityPlanner> planner = nullptr;
+static std::unique_ptr<PlanningPipeline> planner = nullptr;
 
 /// replace shared w/ unique
 static std::shared_ptr<OccupancyGrid> grid = nullptr;
@@ -27,7 +27,7 @@ Perception MakeEmptyPerception() { return {}; }
 
 void StartPlanning() {
   std::cout << "Initalize Planning" << std::endl;
-  planner = std::make_unique<ProximityPlanner>(BOUNDS, BODY);
+  planner = std::make_unique<PlanningPipeline>(BOUNDS, BODY);
   grid = std::make_shared<OccupancyGrid>();
 };
 
@@ -71,12 +71,12 @@ Plan GetNextPlan(const Perception *perception) {
   const double offsetX = perception->offsetX;
   const double offsetY = perception->offsetY;
 
-  std::cout << "N: " << std::to_string(N) << std::endl;
-  std::cout << "M: " << std::to_string(M) << std::endl;
-  std::cout << "cellX: " << std::to_string(cellX) << std::endl;
-  std::cout << "cellY: " << std::to_string(cellY) << std::endl;
-  std::cout << "offsetX: " << std::to_string(offsetX) << std::endl;
-  std::cout << "offsetY: " << std::to_string(offsetY) << std::endl;
+  // std::cout << "N: " << std::to_string(N) << std::endl;
+  // std::cout << "M: " << std::to_string(M) << std::endl;
+  // std::cout << "cellX: " << std::to_string(cellX) << std::endl;
+  // std::cout << "cellY: " << std::to_string(cellY) << std::endl;
+  // std::cout << "offsetX: " << std::to_string(offsetX) << std::endl;
+  // std::cout << "offsetY: " << std::to_string(offsetY) << std::endl;
 
   grid->reset(perception->occupancy, perception->numBytes, N, M, cellX, cellY,
               offsetX, offsetY);

@@ -13,11 +13,11 @@ namespace planning {
 struct Scene {
   Footprints revoy;
   HookedPose revoyPose;
-  Path plannedPath;
+  std::vector<Path> plannedPaths;
   Scenario scenario;
   Footprints visibleEntities;
   std::shared_ptr<OccupancyGrid> grid;
-  Graph graph;
+  std::vector<Graph> graphs;
 };
 
 class McapWrapper {
@@ -25,6 +25,10 @@ private:
   mcap::McapWriter writer;
   std::map<std::string, mcap::ChannelId> channelIds;
   size_t frameIndex = 0;
+  void addTopic(const std::string &type, const std::string &desc,
+                const std::string &topic);
+  void writeTopic(const std::string &serialized, const std::string &topic,
+                  double writeTime);
 
 public:
   McapWrapper(const std::string outputFilename);

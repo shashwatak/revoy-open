@@ -16,7 +16,7 @@ FootprintsToOccupancyGrid(const Footprints &footprints, const HookedPose &pose);
 
 Simpl::Simpl(Scenario scenario)
     : scenario_(scenario), revoyEv_(scenario_.start),
-      proximityPlanner_(scenario_.bounds, scenario_.bodyParams) {};
+      planningPipeline_(scenario_.bounds, scenario_.bodyParams) {};
 
 void Simpl::update(int64_t time, double actualSpeed, double actualSteer) {
 
@@ -36,7 +36,7 @@ void Simpl::update(int64_t time, double actualSpeed, double actualSteer) {
   // grid->print();
 
   // update plan w/ latest revoy pose and occupancy grid
-  proximityPlanner_.plan(revoyEv_.getHookedPose(), scenario_.goal, grid);
+  planningPipeline_.plan(revoyEv_.getHookedPose(), scenario_.goal, grid);
 }
 
 const Scenario &Simpl::getScenario() const { return scenario_; }
@@ -50,7 +50,7 @@ bool Simpl::isDone() const {
        revoyEv_.getHookedPose().trailerYaw - revoyEv_.getHookedPose().yaw},
       scenario_.bodyParams);
 
-  const auto grid = proximityPlanner_.getLastOccupancyGrid();
+  const auto grid = planningPipeline_.getLastOccupancyGrid();
   bool invalidStart = false;
   if (grid && grid->areFootprintsOccupied(bodyZero)) {
     invalidStart = true;
@@ -92,8 +92,8 @@ Footprints MockProximityObserver::getFootprints(const Scenario &scenario,
   return footprints;
 }
 
-const ProximityPlanner &Simpl::getProximityPlanner() const {
-  return proximityPlanner_;
+const PlanningPipeline &Simpl::getPlanningPipeline() const {
+  return planningPipeline_;
 };
 
 const MockRevoyEv &Simpl::getRevoyEv() const { return revoyEv_; };

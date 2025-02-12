@@ -6,12 +6,12 @@ Scene SimplToScene(std::unique_ptr<Simpl> &simpl, int64_t time) {
 
   Scene scene;
   scene.scenario = simpl->getScenario();
-  scene.plannedPath = simpl->getProximityPlanner().getLastSolution();
-  scene.graph = simpl->getProximityPlanner().getLastGraph();
+  scene.plannedPaths = simpl->getPlanningPipeline().getLastSolutions();
+  scene.graphs = simpl->getPlanningPipeline().getLastGraphs();
   scene.revoy = simpl->getRevoyEv().getBody(scene.scenario.bodyParams);
   scene.revoyPose = simpl->getRevoyEv().getHookedPose();
   scene.visibleEntities = simpl->getVisibleFootprints(time);
-  scene.grid = simpl->getProximityPlanner().getLastOccupancyGrid();
+  scene.grid = simpl->getPlanningPipeline().getLastOccupancyGrid();
 
   // std::cout << "pose: " <<
   // std::to_string(simpl->getRevoyEv().getHookedPose().position.x()) << ", "
