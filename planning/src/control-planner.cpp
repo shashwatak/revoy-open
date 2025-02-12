@@ -56,7 +56,7 @@ ControlPlanner::ControlPlanner(const Bounds &bounds,
   space_->setBounds(rbounds);
 };
 
-void ControlPlanner::plan(const HookedPose &start_, const HookedPose &goal_,
+void ControlPlanner::plan(const HookedPose &start_, const HookedPose &_,
                             std::shared_ptr<OccupancyGrid> grid) {
 
   // create a start state
@@ -68,15 +68,15 @@ void ControlPlanner::plan(const HookedPose &start_, const HookedPose &goal_,
 
   // create goal state
   ompl::base::ScopedState<RevoySpace> goal(space_);
-  goal->setX(goal_.position.x());
-  goal->setY(goal_.position.y());
-  goal->setYaw(goal_.yaw);
-  goal->setTrailerYaw(goal_.trailerYaw);
+  // goal->setX(goal_.position.x());
+  // goal->setY(goal_.position.y());
+  // goal->setYaw(goal_.yaw);
+  // goal->setTrailerYaw(goal_.trailerYaw);
 
-  // goal->setX(start->getX() + cos(start->getYaw()));
-  // goal->setY(start->getY() + sin(start->getYaw()));
-  // goal->setYaw(start->getYaw());
-  // goal->setYaw(start->getTrailerYaw());
+  goal->setX(start->getX() + cos(start->getYaw()));
+  goal->setY(start->getY() + sin(start->getYaw()));
+  goal->setYaw(start->getYaw());
+  goal->setYaw(start->getTrailerYaw());
 
   setup_.setStartAndGoalStates(start, goal, 1);
 
