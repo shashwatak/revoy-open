@@ -11,7 +11,7 @@
 namespace planning {
 
 ControlPlanner::ControlPlanner(const Bounds &bounds,
-                                   const BodyParams &bodyParams)
+                               const BodyParams &bodyParams)
     : bounds_(bounds), space_(std::make_shared<RevoySpace>()),
       cspace_(
           std::make_shared<ompl::control::RealVectorControlSpace>(space_, 2)),
@@ -26,8 +26,8 @@ ControlPlanner::ControlPlanner(const Bounds &bounds,
   ompl::base::RealVectorBounds cbounds(2);
   cbounds.low[0] = -10;
   cbounds.high[0] = 10;
-  cbounds.low[1] = (-std::numbers::pi)/2.0;
-  cbounds.high[1] = (std::numbers::pi)/2.0;
+  cbounds.low[1] = (-std::numbers::pi) / 2.0;
+  cbounds.high[1] = (std::numbers::pi) / 2.0;
   cspace_->setBounds(cbounds);
 
   // set the state propagation routine
@@ -56,70 +56,89 @@ ControlPlanner::ControlPlanner(const Bounds &bounds,
   space_->setBounds(rbounds);
 };
 
-void ControlPlanner::plan(const HookedPose &start_, const HookedPose &_,
-                            std::shared_ptr<OccupancyGrid> grid) {
-
-  // create a start state
-  ompl::base::ScopedState<RevoySpace> start(space_);
-  start->setX(start_.position.x());
-  start->setY(start_.position.y());
-  start->setYaw(start_.yaw);
-  start->setTrailerYaw(start_.trailerYaw);
-
-  // create goal state
-  ompl::base::ScopedState<RevoySpace> goal(space_);
-  // goal->setX(goal_.position.x());
-  // goal->setY(goal_.position.y());
-  // goal->setYaw(goal_.yaw);
-  // goal->setTrailerYaw(goal_.trailerYaw);
-
-  goal->setX(start->getX() + cos(start->getYaw()));
-  goal->setY(start->getY() + sin(start->getYaw()));
-  goal->setYaw(start->getYaw());
-  goal->setYaw(start->getTrailerYaw());
-
-  setup_.setStartAndGoalStates(start, goal, 1);
+void ControlPlanner::plan(const HookedPose &start_,
+                          const std::vector<Pose> &goals,
+                          std::shared_ptr<OccupancyGrid> grid) {
 
   path_.clear();
   controls_ = {};
   controlsVector_ = {};
   grid_ = grid;
+  graph_.nodes.clear();
+  graph_.edges.clear();
 
-  const Pose &gridPose{{start->getX(), start->getY()}, start->getYaw()};
-  validityChecker_->setOccupancyGrid(grid_, gridPose);
-
-  setup_.setup();
-  // setup_.print();
-  ompl::base::PlannerStatus solved = setup_.solve(0.1);
-
-  if (solved != ompl::base::PlannerStatus::EXACT_SOLUTION &&
-      solved != ompl::base::PlannerStatus::APPROXIMATE_SOLUTION) {
-    std::cout << "no control solution: " << solved << std::endl;
-  } else {
-  //   std::cout << "control solution: " << solved << std::endl;
-    auto &solution = setup_.getSolutionPath();
-    for (const auto baseState : solution.getStates()) {
-      const auto state = baseState->as<RevoySpace::StateType>();
-      path_.push_back({{state->getX(), state->getY()}, state->getYaw()});
+  const size_t numGoals = goals.size();
+  for (size_t i = 0; i < numGoals; i++) {
+    Pose start = {start_.position, start_.yaw};
+    if (i > 0) {
+      start = goals[i-1];
     }
 
-    if (solution.getStateCount() > 0) {
-      for (auto ctrlBase: solution.getControls()){
-          const auto ctrl = ctrlBase->as<ompl::control::RealVectorControlSpace::ControlType>();
-          controlsVector_.push_back({ctrl->values[0], ctrl->values[1], 1.0});
+    // create a start state
+    ompl::base::ScopedState<RevoySpace> revoyStart(space_);
+    revoyStart->setX(start.position.x());
+    revoyStart->setY(start.position.y());
+    revoyStart->setYaw(start.yaw);
+    revoyStart->setTrailerYaw(start.yaw);
+
+    // create goal state
+    Pose goal = goals[i];
+    ompl::base::ScopedState<RevoySpace> revoyGoal(space_);
+    revoyGoal->setX(goal.position.x());
+    revoyGoal->setY(goal.position.y());
+    revoyGoal->setYaw(goal.yaw);
+    revoyGoal->setTrailerYaw(goal.yaw);
+
+    setup_.setStartAndGoalStates(revoyStart, revoyGoal, 1);
+
+    const Pose &gridPose{{revoyStart->getX(), revoyStart->getY()},
+                         revoyStart->getYaw()};
+    validityChecker_->setOccupancyGrid(grid_, gridPose);
+
+    setup_.setup();
+    // setup_.print();
+
+    ompl::base::PlannerStatus solved = setup_.solve(0.1);
+    if (solved != ompl::base::PlannerStatus::EXACT_SOLUTION &&
+        solved != ompl::base::PlannerStatus::APPROXIMATE_SOLUTION) {
+
+      std::cout << "no control solution: " << solved << std::endl;
+
+    } else {
+
+      std::cout << "control solution: " << solved << std::endl;
+      auto &solution = setup_.getSolutionPath();
+      for (const auto baseState : solution.getStates()) {
+        const auto state = baseState->as<RevoySpace::StateType>();
+        path_.push_back({{state->getX(), state->getY()}, state->getYaw()});
       }
-      
-      controls_ = controlsVector_[0];
+
+      if (solution.getStateCount() > 0) {
+
+        for (auto ctrlBase : solution.getControls()) {
+          const auto ctrl =
+              ctrlBase->as<ompl::control::RealVectorControlSpace::ControlType>();
+          controlsVector_.push_back({ctrl->values[0], ctrl->values[1], 1.0});
+        }
+
+        controls_ = controlsVector_[0];
+      }
+
+      FillGraph<ompl::control::SimpleSetup, RevoySpace::StateType>(graph_,
+                                                                   setup_);
+      setup_.clear();
     }
 
-    FillGraph<ompl::control::SimpleSetup, RevoySpace::StateType>(graph_, setup_);
   }
-  setup_.clear();
 }
 
-const std::vector<HookedPose> &ControlPlanner::getLastSolution() const { return path_; };
+const std::vector<HookedPose> &ControlPlanner::getLastSolution() const {
+  return path_;
+};
 const Controls &ControlPlanner::getControls() const { return controls_; }
-const std::vector<Controls> &ControlPlanner::getControlsVector() const { return controlsVector_; }
+const std::vector<Controls> &ControlPlanner::getControlsVector() const {
+  return controlsVector_;
+}
 const Graph &ControlPlanner::getLastGraph() const { return graph_; }
 
 ControlPlanner::ValidityChecker::ValidityChecker(

@@ -23,7 +23,7 @@ void MockRevoyEv::update(const Controls &controls, const Bounds &bounds,
   const double travel = controls.speed * duration / K;
   /// hack todo fix
   const BodyParams param;
-  
+
   for (int i = 0; i < K; i++) {
     x += travel * cos(yaw);
     y += travel * sin(yaw);

@@ -78,21 +78,28 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
     auto &solution = setup_.getSolutionPath();
     const size_t count = solution.getStateCount();
     std::cout << "    count states: " << std::to_string(count) << std::endl;
-    
+
     for (size_t i = 1; i < count; i++) {
-      const auto& prevState = solution.getState(i-1)->as<ompl::base::ReedsSheppStateSpace::StateType>();
-      const auto& state = solution.getState(i)->as<ompl::base::ReedsSheppStateSpace::StateType>();
+      const auto &prevState =
+          solution.getState(i - 1)
+              ->as<ompl::base::ReedsSheppStateSpace::StateType>();
+      const auto &state =
+          solution.getState(i)
+              ->as<ompl::base::ReedsSheppStateSpace::StateType>();
       static constexpr double frac = 0.1;
       double t = 0;
       while (t < 1) {
-        auto space = setup_.getStateSpace()->as<ompl::base::ReedsSheppStateSpace>();
-        auto newState = space->allocState()->as<ompl::base::ReedsSheppStateSpace::StateType>();
-        space->interpolate(prevState, state, t, newState);  
-        path_.push_back({{newState->getX(), newState->getY()}, newState->getYaw()});
-        t+=frac;
-      }    
+        auto space =
+            setup_.getStateSpace()->as<ompl::base::ReedsSheppStateSpace>();
+        auto newState = space->allocState()
+                            ->as<ompl::base::ReedsSheppStateSpace::StateType>();
+        space->interpolate(prevState, state, t, newState);
+        path_.push_back(
+            {{newState->getX(), newState->getY()}, newState->getYaw()});
+        t += frac;
+      }
     }
-    
+
     // ompl::geometric::PathSimplifier ps(setup_.getSpaceInformation());
     // ps.reduceVertices(solution);
 
@@ -106,7 +113,9 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
   setup_.clear();
 }
 
-const std::vector<Pose> &CoarsePlanner::getLastSolution() const { return path_; };
+const std::vector<Pose> &CoarsePlanner::getLastSolution() const {
+  return path_;
+};
 const Graph &CoarsePlanner::getLastGraph() const { return graph_; }
 
 CoarsePlanner::ValidityChecker::ValidityChecker(

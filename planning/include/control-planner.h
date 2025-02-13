@@ -19,7 +19,7 @@ public:
   ControlPlanner(const Bounds &bounds, const BodyParams &bodyParams);
 
   /// Completes ompl setup, calls ompl solve
-  void plan(const HookedPose &start, const HookedPose &goal,
+  void plan(const HookedPose &start, const std::vector<Pose> &goals,
             std::shared_ptr<OccupancyGrid> grid);
 
   /// getters used for output / debug

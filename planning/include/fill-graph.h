@@ -14,10 +14,10 @@ void FillGraph(Graph &graph, const SimpleSetup &setup) {
   ompl::base::PlannerData pd(setup.getSpaceInformation());
   setup.getPlannerData(pd);
 
-  graph.edges.clear();
-  graph.nodes.clear();
-
-  graph.nodes.reserve(pd.numVertices());
+  // graph.edges.clear();
+  // graph.nodes.clear();
+  const size_t prevSize = graph.nodes.size();
+  graph.nodes.reserve(prevSize + pd.numVertices());
 
   /// capture nodes
   for (unsigned int i = 0; i < pd.numVertices(); ++i) {
@@ -31,7 +31,7 @@ void FillGraph(Graph &graph, const SimpleSetup &setup) {
   for (unsigned int i = 0; i < pd.numVertices(); ++i) {
     pd.getEdges(i, edgeList);
     for (unsigned int target : edgeList) {
-      graph.edges.push_back({i, target});
+      graph.edges.push_back({i + prevSize, target + prevSize});
     }
   }
 };

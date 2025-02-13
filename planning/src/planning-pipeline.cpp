@@ -18,10 +18,10 @@ void PlanningPipeline::plan(const HookedPose &start, const HookedPose &goal,
   /// Plan to inform the Control Plan
   coarsePlanner_->plan(start, goal, grid);
 
-  /// Control Plan: Explores SE(2)+SO(2) w/ non-holonomic constraint, articulated vehicle with a single
-  /// hook-point. If possible, will find a path to goal that respects vehicle
-  /// artuculation dynamics.
-  controlPlanner_->plan(start, goal, grid);
+  /// Control Plan: Explores SE(2)+SO(2) w/ non-holonomic constraint,
+  /// articulated vehicle with a single hook-point. If possible, will find a
+  /// path to goal that respects vehicle artuculation dynamics.
+  controlPlanner_->plan(start, coarsePlanner_->getLastSolution(), grid);
 }
 
 const std::shared_ptr<OccupancyGrid> &
@@ -29,10 +29,12 @@ PlanningPipeline::getLastOccupancyGrid() const {
   return grid_;
 }
 
-const std::shared_ptr<CoarsePlanner> PlanningPipeline::getCoarsePlanner() const {
+const std::shared_ptr<CoarsePlanner>
+PlanningPipeline::getCoarsePlanner() const {
   return coarsePlanner_;
 }
-const std::shared_ptr<ControlPlanner> PlanningPipeline::getControlPlanner() const {
+const std::shared_ptr<ControlPlanner>
+PlanningPipeline::getControlPlanner() const {
   return controlPlanner_;
 }
 

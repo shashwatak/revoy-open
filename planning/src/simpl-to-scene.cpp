@@ -6,10 +6,14 @@ Scene SimplToScene(std::unique_ptr<Simpl> &simpl, int64_t time) {
 
   Scene scene;
   scene.scenario = simpl->getScenario();
-  scene.coarseSolution = simpl->getPlanningPipeline().getCoarsePlanner()->getLastSolution();
-  scene.controlSolution = simpl->getPlanningPipeline().getControlPlanner()->getLastSolution();
-  scene.coarseGraph = simpl->getPlanningPipeline().getCoarsePlanner()->getLastGraph();
-  scene.controlGraph = simpl->getPlanningPipeline().getControlPlanner()->getLastGraph();
+  scene.coarseSolution =
+      simpl->getPlanningPipeline().getCoarsePlanner()->getLastSolution();
+  scene.controlSolution =
+      simpl->getPlanningPipeline().getControlPlanner()->getLastSolution();
+  scene.coarseGraph =
+      simpl->getPlanningPipeline().getCoarsePlanner()->getLastGraph();
+  scene.controlGraph =
+      simpl->getPlanningPipeline().getControlPlanner()->getLastGraph();
   scene.revoy = simpl->getRevoyEv().getBody(scene.scenario.bodyParams);
   scene.revoyPose = simpl->getRevoyEv().getHookedPose();
   scene.visibleEntities = simpl->getVisibleFootprints(time);

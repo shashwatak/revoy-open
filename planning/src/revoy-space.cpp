@@ -63,7 +63,7 @@ void RevoySpace::Propagate(const RevoySpace::StateType *state,
 
   /// hack todo fix
   const BodyParams param;
-  
+
   for (int i = 0; i < K; i++) {
     x += travel * cos(yaw);
     y += travel * sin(yaw);

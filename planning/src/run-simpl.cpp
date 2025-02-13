@@ -10,7 +10,6 @@ using namespace planning;
 
 int main(int argc, char **argv) {
 
-  
   const std::vector<std::string> args(argv + 1, argv + argc);
 
   const Scenario scenario = MakeYardScenario();
@@ -43,7 +42,8 @@ int main(int argc, char **argv) {
     collision |= IsBodyCollidingAnyObstacles(revoy, obsts);
 
     // for this test, instantly apply speed / steer to actual speed / steer
-    const Controls controls = simpl->getPlanningPipeline().getControlPlanner()->getControls();
+    const Controls controls =
+        simpl->getPlanningPipeline().getControlPlanner()->getControls();
 
     actualSpeed = controls.speed;
     actualSteer = controls.steer;

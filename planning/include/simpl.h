@@ -29,9 +29,7 @@ public:
   bool isDone() const;
 };
 
-
 const std::shared_ptr<OccupancyGrid>
 FootprintsToOccupancyGrid(const Footprints &footprints, const HookedPose &pose);
-
 
 } // namespace planning

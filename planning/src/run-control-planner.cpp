@@ -1,19 +1,18 @@
 
-#include "planning/make-scenario.h"
 #include "planning/control-planner.h"
-#include "planning/mock-revoy-ev.h"
 #include "planning/footprint-overlap.h"
 #include "planning/footprint-transform.h"
+#include "planning/make-scenario.h"
+#include "planning/mock-revoy-ev.h"
 
-#include "planning/simpl.h"
 #include "planning/mcap-utils.h"
+#include "planning/simpl.h"
 #include <cstdint>
 
 using namespace planning;
 
-
-/// exercise control-planner by applying solution controls (speed, steer, duration) to the
-/// vehicle model.
+/// exercise control-planner by applying solution controls (speed, steer,
+/// duration) to the vehicle model.
 
 int main(int argc, char **argv) {
 
@@ -24,13 +23,15 @@ int main(int argc, char **argv) {
   const Scenario scenario = MakeYardScenario();
 
   /// setup planners and mock revoy
-  auto coarsePlanner = std::make_unique<CoarsePlanner>(scenario.bounds, scenario.bodyParams);
-  auto controlPlanner = std::make_unique<ControlPlanner>(scenario.bounds, scenario.bodyParams);
+  auto coarsePlanner =
+      std::make_unique<CoarsePlanner>(scenario.bounds, scenario.bodyParams);
+  auto controlPlanner =
+      std::make_unique<ControlPlanner>(scenario.bounds, scenario.bodyParams);
   auto mockRevoyEv = std::make_unique<MockRevoyEv>(scenario.start);
 
   /// add obstacles to occupancy grid
   Footprints footprints;
-  for (const Entity& entity: scenario.entities) {
+  for (const Entity &entity : scenario.entities) {
     const auto tfFootprint = TransformFootprint(entity.footprint, entity.pose);
     footprints.push_back(tfFootprint);
   }
@@ -42,14 +43,14 @@ int main(int argc, char **argv) {
   std::cout << "plan" << std::endl;
   coarsePlanner->plan(scenario.start, scenario.goal, grid);
 
-  // const auto& solution = coarsePlanner->getLastSolution();
+  const auto &solution = coarsePlanner->getLastSolution();
 
   /// vehicle kinematic plan
-  controlPlanner->plan(scenario.start, scenario.goal, grid);
+  controlPlanner->plan(scenario.start, solution, grid);
 
   /// init visualizer
-  std::unique_ptr<McapWrapper> mcapWrapper =
-      std::make_unique<McapWrapper>("control-planner-only-" + scenario.name + ".mcap");
+  std::unique_ptr<McapWrapper> mcapWrapper = std::make_unique<McapWrapper>(
+      "control-planner-only-" + scenario.name + ".mcap");
 
   /// verify plan by moving vehicle along
   int64_t time = scenario.timeParams.startTime;
@@ -81,8 +82,9 @@ int main(int argc, char **argv) {
     /// get current controls node
     const auto controls = controlsVector[controlsIdx];
 
-    /// update vehicle model 
-    mockRevoyEv->update(controls, scenario.bounds, scenario.timeParams.dt / 1e6);
+    /// update vehicle model
+    mockRevoyEv->update(controls, scenario.bounds,
+                        scenario.timeParams.dt / 1e6);
 
     /// update visualization
     /// todo: replace bug-prone push_back weirdness
@@ -97,23 +99,28 @@ int main(int argc, char **argv) {
     mcapWrapper->write(scene, time);
 
     /// true if ever in collision
-    collision |= IsBodyCollidingAnyObstacles(scene.revoy, scene.visibleEntities);
+    collision |=
+        IsBodyCollidingAnyObstacles(scene.revoy, scene.visibleEntities);
 
     /// tick
     // std::cout << "---------------------------" << std::endl;
     // std::cout << "time: " << std::to_string(time) << std::endl;
-    // std::cout << "dt: " << std::to_string(scenario.timeParams.dt) << std::endl;
+    // std::cout << "dt: " << std::to_string(scenario.timeParams.dt) <<
+    // std::endl;
     time += scenario.timeParams.dt;
     // std::cout << "time now: " << std::to_string(time) << std::endl;
     double next = scenario.timeParams.startTime + (currControlEnd * 1e6);
 
-    /// when this control-nodes duration has expired, move onto the next node in the solution path
+    /// when this control-nodes duration has expired, move onto the next node in
+    /// the solution path
     if (time > next) {
-      // std::cout << "time > next: " << std::to_string(time) << " > " << std::to_string(next) << std::endl;
+      // std::cout << "time > next: " << std::to_string(time) << " > " <<
+      // std::to_string(next) << std::endl;
       controlsIdx++;
-      if ( controlsIdx < controlsVector.size()) { 
-        currControlEnd += controlsVector[controlsIdx].duration; 
-        // std::cout << "new next: " << std::to_string(currControlEnd) << std::endl;
+      if (controlsIdx < controlsVector.size()) {
+        currControlEnd += controlsVector[controlsIdx].duration;
+        // std::cout << "new next: " << std::to_string(currControlEnd) <<
+        // std::endl;
       };
     }
   }
@@ -125,4 +132,3 @@ int main(int argc, char **argv) {
   std::cout << "collision: " << (collision ? "yes" : "no") << std::endl;
   return (collision) ? 0 : 1;
 }
-
