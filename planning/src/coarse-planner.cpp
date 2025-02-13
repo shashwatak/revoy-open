@@ -74,12 +74,32 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
       solved != ompl::base::PlannerStatus::APPROXIMATE_SOLUTION) {
     std::cout << "no coarse solution: " << solved << std::endl;
   } else {
-    // std::cout << "coarse solution: " << solved << std::endl;
+    std::cout << "coarse solution: " << solved << std::endl;
     auto &solution = setup_.getSolutionPath();
-    for (const auto baseState : solution.getStates()) {
-      const auto state = baseState->as<Flatland::StateType>();
-      path_.push_back({{state->getX(), state->getY()}, state->getYaw()});
+    const size_t count = solution.getStateCount();
+    std::cout << "    count states: " << std::to_string(count) << std::endl;
+    
+    for (size_t i = 1; i < count; i++) {
+      const auto& prevState = solution.getState(i-1)->as<ompl::base::ReedsSheppStateSpace::StateType>();
+      const auto& state = solution.getState(i)->as<ompl::base::ReedsSheppStateSpace::StateType>();
+      static constexpr double frac = 0.1;
+      double t = 0;
+      while (t < 1) {
+        auto space = setup_.getStateSpace()->as<ompl::base::ReedsSheppStateSpace>();
+        auto newState = space->allocState()->as<ompl::base::ReedsSheppStateSpace::StateType>();
+        space->interpolate(prevState, state, t, newState);  
+        path_.push_back({{newState->getX(), newState->getY()}, newState->getYaw()});
+        t+=frac;
+      }    
     }
+    
+    // ompl::geometric::PathSimplifier ps(setup_.getSpaceInformation());
+    // ps.reduceVertices(solution);
+
+    // for (const auto baseState : solution.getStates()) {
+    //   const auto state = baseState->as<Flatland::StateType>();
+    //   path_.push_back({{state->getX(), state->getY()}, state->getYaw()});
+    // }
   }
 
   FillGraph<ompl::geometric::SimpleSetup, Flatland::StateType>(graph_, setup_);
@@ -108,11 +128,6 @@ bool CoarsePlanner::ValidityChecker::isValid(
   }
   const auto *state = state_->as<Flatland::StateType>();
   bool isValid = si_->satisfiesBounds(state);
-
-  // const HookedPose pose = {
-  //     {state->getX(), state->getY()}, state->getYaw(), state->getTrailerYaw()};
-  // const Point point = ReverseTransformPoint(pose.position, currentPose_);
-  // isValid &= !grid_->isPointOccupied(point);
 
   const HookedPose pose = {
       {state->getX(), state->getY()}, state->getYaw(), state->getTrailerYaw()};

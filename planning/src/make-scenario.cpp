@@ -67,7 +67,7 @@ Scenario MakeYardScenario() {
   scenario.start = start;
   scenario.goal = goal;
 
-  scenario.timeParams.timeout = 2e10;
+  scenario.timeParams.timeout = 1e6;
 
   scenario.bounds = {50, 50, -50, -50};
   return scenario;

@@ -6,7 +6,7 @@
 #include "planning/types.h"
 
 #include <ompl/base/SpaceInformation.h>
-#include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/spaces/ReedsSheppStateSpace.h>
 #include <ompl/geometric/SimpleSetup.h>
 
 namespace planning {
@@ -36,7 +36,7 @@ private:
   Graph graph_ = {};
 
   /// OMPL stuff
-  std::shared_ptr<ompl::base::RealVectorStateSpace> space_;
+  std::shared_ptr<ompl::base::ReedsSheppStateSpace> space_;
   ompl::geometric::SimpleSetup setup_;
   std::shared_ptr<ValidityChecker> validityChecker_;
 
@@ -66,9 +66,9 @@ public:
     Pose currentPose_ = {};
   };
 
-  class Flatland : public ompl::base::RealVectorStateSpace {
+  class Flatland : public ompl::base::ReedsSheppStateSpace {
   public:
-    Flatland(const Bounds &bounds) : ompl::base::RealVectorStateSpace(2) {
+    Flatland(const Bounds &bounds) : ompl::base::ReedsSheppStateSpace(15.0) {
       ompl::base::RealVectorBounds rbounds(2);
       rbounds.low[0] = bounds.lowerX;
       rbounds.low[1] = bounds.lowerY;
@@ -77,22 +77,12 @@ public:
       setBounds(rbounds);
     }
 
-    class StateType : public ompl::base::RealVectorStateSpace::StateType {
+    class StateType : public ompl::base::ReedsSheppStateSpace::StateType {
 
     public:
       StateType() = default;
-      double getX() const { return values[0]; };
-      double getY() const { return values[1]; };
-      double getYaw() const { return 0; };
       double getTrailerYaw() const { return 0; };
       double getHitchAngle() const { return 0; };
-      void setX(double x) { values[0] = x; };
-      void setY(double y) { values[1] = y; };
-      void setXY(double x, double y) {
-        setX(x);
-        setY(y);
-      };
-      void setYaw(double _) {};
       void setTrailerYaw(double _) {};
     };
   };

@@ -10,6 +10,7 @@ using namespace planning;
 
 int main(int argc, char **argv) {
 
+  
   const std::vector<std::string> args(argv + 1, argv + argc);
 
   const Scenario scenario = MakeYardScenario();
@@ -41,8 +42,7 @@ int main(int argc, char **argv) {
     const Footprints obsts = simpl->getVisibleFootprints(time);
     collision |= IsBodyCollidingAnyObstacles(revoy, obsts);
 
-    // for this test, instantly apply speed / steer to actual speed /
-    // steer
+    // for this test, instantly apply speed / steer to actual speed / steer
     const Controls controls = simpl->getPlanningPipeline().getControlPlanner()->getControls();
 
     actualSpeed = controls.speed;
@@ -50,6 +50,9 @@ int main(int argc, char **argv) {
 
     // tick
     time += scenario.timeParams.dt;
+    if (time % (uint8_t)1e6 == 0) {
+      std::cout << "time: " << std::to_string(time) << std::endl;
+    }
   }
 
   simpl.reset();

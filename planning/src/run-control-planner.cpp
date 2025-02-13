@@ -39,8 +39,8 @@ int main(int argc, char **argv) {
   // grid->print();
 
   /// coarse plan
+  std::cout << "plan" << std::endl;
   coarsePlanner->plan(scenario.start, scenario.goal, grid);
-
 
   // const auto& solution = coarsePlanner->getLastSolution();
 
