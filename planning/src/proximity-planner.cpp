@@ -99,7 +99,8 @@ void ProximityPlanner::plan(const HookedPose &start_, const HookedPose &_,
       controls_.duration = solution.getControlDuration(0);
     }
 
-    FillGraph(graph_, setup_);
+    // FillGraph<ompl::control::SimpleSetup, RevoySpace::StateType>(graph_,
+    //                                                              setup_);
   }
   setup_.clear();
 }
@@ -161,7 +162,7 @@ void ProximityPlanner::Propagator::propagate(
       control->as<ompl::control::DiscreteControlSpace::ControlType>();
   const double speed = ctrl->value;
   RevoySpace::Propagate(start->as<RevoySpace::StateType>(), {speed, 0},
-                        bodyParams_, duration,
+                        duration,
                         result->as<RevoySpace::StateType>());
 };
 

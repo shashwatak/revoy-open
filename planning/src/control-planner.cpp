@@ -124,8 +124,8 @@ void ControlPlanner::plan(const HookedPose &start_,
         controls_ = controlsVector_[0];
       }
 
-      FillGraph<ompl::control::SimpleSetup, RevoySpace::StateType>(graph_,
-                                                                   setup_);
+      // FillGraph<ompl::control::SimpleSetup, RevoySpace::StateType>(graph_,
+      //                                                              setup_);
       setup_.clear();
     }
   }
