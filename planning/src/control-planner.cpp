@@ -17,8 +17,7 @@ ControlPlanner::ControlPlanner(const Bounds &bounds,
           std::make_shared<ompl::control::RealVectorControlSpace>(space_, 2)),
       setup_(cspace_), validityChecker_(std::make_shared<ValidityChecker>(
                            setup_.getSpaceInformation(), bodyParams)),
-      propagator_(std::make_shared<Propagator>(setup_.getSpaceInformation(),
-                                               bodyParams)) {
+      propagator_(std::make_shared<Propagator>(setup_.getSpaceInformation())) {
 
   ompl::msg::setLogLevel(ompl::msg::LogLevel::LOG_WARN);
 
@@ -71,7 +70,7 @@ void ControlPlanner::plan(const HookedPose &start_,
   for (size_t i = 0; i < numGoals; i++) {
     Pose start = {start_.position, start_.yaw};
     if (i > 0) {
-      start = goals[i-1];
+      start = goals[i - 1];
     }
 
     // create a start state
@@ -117,7 +116,8 @@ void ControlPlanner::plan(const HookedPose &start_,
 
         for (auto ctrlBase : solution.getControls()) {
           const auto ctrl =
-              ctrlBase->as<ompl::control::RealVectorControlSpace::ControlType>();
+              ctrlBase
+                  ->as<ompl::control::RealVectorControlSpace::ControlType>();
           controlsVector_.push_back({ctrl->values[0], ctrl->values[1], 1.0});
         }
 
@@ -128,7 +128,6 @@ void ControlPlanner::plan(const HookedPose &start_,
                                                                    setup_);
       setup_.clear();
     }
-
   }
 }
 
@@ -179,9 +178,8 @@ bool ControlPlanner::ValidityChecker::isValid(
 }
 
 ControlPlanner::Propagator::Propagator(
-    const std::shared_ptr<ompl::control::SpaceInformation> si,
-    const BodyParams &bodyParams)
-    : ompl::control::StatePropagator(si), bodyParams_(bodyParams) {}
+    const std::shared_ptr<ompl::control::SpaceInformation> si)
+    : ompl::control::StatePropagator(si) {}
 
 void ControlPlanner::Propagator::propagate(
     const ompl::base::State *start, const ompl::control::Control *control,
@@ -192,8 +190,7 @@ void ControlPlanner::Propagator::propagate(
   const double speed = ctrl->values[0];
   const double steer = ctrl->values[1];
   RevoySpace::Propagate(start->as<RevoySpace::StateType>(), {speed, steer},
-                        bodyParams_, duration,
-                        result->as<RevoySpace::StateType>());
+                        duration, result->as<RevoySpace::StateType>());
 };
 
 } // namespace planning

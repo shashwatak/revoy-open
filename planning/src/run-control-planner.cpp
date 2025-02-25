@@ -83,8 +83,7 @@ int main(int argc, char **argv) {
     const auto controls = controlsVector[controlsIdx];
 
     /// update vehicle model
-    mockRevoyEv->update(controls, scenario.bounds,
-                        scenario.timeParams.dt / 1e6);
+    mockRevoyEv->update(controls, scenario.timeParams.dt / 1e6);
 
     /// update visualization
     /// todo: replace bug-prone push_back weirdness

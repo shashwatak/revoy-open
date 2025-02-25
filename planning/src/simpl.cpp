@@ -21,7 +21,7 @@ void Simpl::update(int64_t time, double actualSpeed, double actualSteer) {
   const Controls controls = {actualSpeed, actualSteer};
 
   // update revoy w/ controls
-  revoyEv_.update(controls, scenario_.bounds, scenario_.timeParams.dt / 1e6);
+  revoyEv_.update(controls, scenario_.timeParams.dt / 1e6);
   // revoyEv_.print(scenario_.bodyParams);
 
   // get simulated obstacle footprints from simulated observers

@@ -10,8 +10,7 @@ namespace planning {
 
 MockRevoyEv::MockRevoyEv(HookedPose start) : hookedPose_(start) {};
 
-void MockRevoyEv::update(const Controls &controls, const Bounds &bounds,
-                         double duration) {
+void MockRevoyEv::update(const Controls &controls, double duration) {
 
   double x = hookedPose_.position.x();
   double y = hookedPose_.position.y();
@@ -31,8 +30,8 @@ void MockRevoyEv::update(const Controls &controls, const Bounds &bounds,
     trailerYaw -= (travel / param.trailerLength) * sin(trailerYaw - yaw);
   }
 
-  hookedPose_.position.x() = fmax(fmin(x, bounds.upperX), bounds.lowerX);
-  hookedPose_.position.y() = fmax(fmin(y, bounds.upperY), bounds.lowerY);
+  hookedPose_.position.x() = x;
+  hookedPose_.position.y() = y;
   hookedPose_.yaw = fixRadian(yaw);
   hookedPose_.trailerYaw = fixRadian(trailerYaw);
 }
