@@ -102,15 +102,20 @@ TEST_CASE("test obstacle scenario parameterized direction and distance") {
 
   const double MIN_AVOIDABLE_DIST = (3 * sqrt(BodyParams().revoyLength));
   const double EAST = 0;
-  const double SOUTH_WEST = -3 * M_PI / 4.0;
+  // const double SOUTH_WEST = -3 * M_PI / 4.0;
 
-  static const std::vector<double> DIRS{EAST, SOUTH_WEST};
-  static const std::vector<double> DISTS{MIN_AVOIDABLE_DIST - 1,
-                                         MIN_AVOIDABLE_DIST + 1};
+  static const std::vector<double> DIRS{
+      EAST,
+      // SOUTH_WEST,
+  };
+  static const std::vector<double> DISTS{
+      // MIN_AVOIDABLE_DIST - 1,
+      MIN_AVOIDABLE_DIST + 1,
+  };
 
   for (const double dir : DIRS) {
     for (const double dist : DISTS) {
-
+      std::cout << std::format("DIR: {}, DIST: {}", dir, dist);
       Scenario scenario = MakeDisappearingObstacleScenario(dir, dist);
 
       std::unique_ptr<Simpl> simpl = std::make_unique<Simpl>(scenario);

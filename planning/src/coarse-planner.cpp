@@ -109,7 +109,8 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
     // }
   }
 
-  // FillGraph<ompl::geometric::SimpleSetup, Flatland::StateType>(graph_, setup_);
+  // FillGraph<ompl::geometric::SimpleSetup, Flatland::StateType>(graph_,
+  // setup_);
   setup_.clear();
 }
 

@@ -143,9 +143,10 @@ void McapWrapper::write(const Scene &scene, int64_t writeTime) {
       MakeGraphSceneUpdate(scene.proximityGraph, writeTime).SerializeAsString();
   writeTopic(proximityGraph, PROXIMITY_GRAPH_TOPIC, writeTime);
   const auto proximityPath =
-      MakePathSceneUpdate(scene.proximitySolution, writeTime).SerializeAsString();
+      MakePathSceneUpdate(scene.proximitySolution, writeTime)
+          .SerializeAsString();
   writeTopic(proximityPath, PROXIMITY_PATH_TOPIC, writeTime);
-  
+
   /// GRID
   const auto grid =
       MakeGrid(scene.grid, scene.revoyPose, writeTime).SerializeAsString();

@@ -7,7 +7,8 @@ PlanningPipeline::PlanningPipeline(const Bounds &bounds,
     : bounds_(bounds),
       coarsePlanner_(std::make_shared<CoarsePlanner>(bounds, bodyParams)),
       controlPlanner_(std::make_shared<ControlPlanner>(bounds, bodyParams)),
-      proximityPlanner_(std::make_shared<ProximityPlanner>(bounds, bodyParams)) {};
+      proximityPlanner_(
+          std::make_shared<ProximityPlanner>(bounds, bodyParams)) {};
 
 void PlanningPipeline::plan(const HookedPose &start, const HookedPose &goal,
                             std::shared_ptr<OccupancyGrid> grid) {

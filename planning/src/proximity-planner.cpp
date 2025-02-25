@@ -162,8 +162,7 @@ void ProximityPlanner::Propagator::propagate(
       control->as<ompl::control::DiscreteControlSpace::ControlType>();
   const double speed = ctrl->value;
   RevoySpace::Propagate(start->as<RevoySpace::StateType>(), {speed, 0},
-                        duration,
-                        result->as<RevoySpace::StateType>());
+                        duration, result->as<RevoySpace::StateType>());
 };
 
 } // namespace planning
