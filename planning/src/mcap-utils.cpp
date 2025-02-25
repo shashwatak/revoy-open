@@ -53,6 +53,8 @@ const static std::string COARSE_GRAPH_TOPIC = "coarse-graph";
 const static std::string COARSE_PATH_TOPIC = "coarse-path";
 const static std::string CONTROL_GRAPH_TOPIC = "control-graph";
 const static std::string CONTROL_PATH_TOPIC = "control-path";
+const static std::string PROXIMITY_GRAPH_TOPIC = "proximity-graph";
+const static std::string PROXIMITY_PATH_TOPIC = "proximity-path";
 const static std::string SCENARIO_TOPIC = "scenario";
 
 } // namespace
@@ -101,6 +103,16 @@ McapWrapper::McapWrapper(const std::string outputFilename) {
   addTopic("foxglove.SceneUpdate",
            revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
                .SerializeAsString(),
+           PROXIMITY_GRAPH_TOPIC);
+
+  addTopic("foxglove.SceneUpdate",
+           revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
+               .SerializeAsString(),
+           PROXIMITY_PATH_TOPIC);
+
+  addTopic("foxglove.SceneUpdate",
+           revoy::BuildFileDescriptorSet(foxglove::SceneUpdate::descriptor())
+               .SerializeAsString(),
            SCENARIO_TOPIC);
 }
 
@@ -126,6 +138,14 @@ void McapWrapper::write(const Scene &scene, int64_t writeTime) {
       MakePathSceneUpdate(scene.controlSolution, writeTime).SerializeAsString();
   writeTopic(controlPath, CONTROL_PATH_TOPIC, writeTime);
 
+  /// PROXIMITY PLAN
+  const auto proximityGraph =
+      MakeGraphSceneUpdate(scene.proximityGraph, writeTime).SerializeAsString();
+  writeTopic(proximityGraph, PROXIMITY_GRAPH_TOPIC, writeTime);
+  const auto proximityPath =
+      MakePathSceneUpdate(scene.proximitySolution, writeTime).SerializeAsString();
+  writeTopic(proximityPath, PROXIMITY_PATH_TOPIC, writeTime);
+  
   /// GRID
   const auto grid =
       MakeGrid(scene.grid, scene.revoyPose, writeTime).SerializeAsString();

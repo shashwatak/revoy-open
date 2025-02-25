@@ -15,11 +15,13 @@ struct Scene {
   HookedPose revoyPose;
   std::vector<Pose> coarseSolution;
   std::vector<HookedPose> controlSolution;
+  Path proximitySolution;
   Scenario scenario;
   Footprints visibleEntities;
   std::shared_ptr<OccupancyGrid> grid;
   Graph coarseGraph;
   Graph controlGraph;
+  Graph proximityGraph;
 };
 
 class McapWrapper {
@@ -37,4 +39,5 @@ public:
   ~McapWrapper();
   void write(const Scene &scene, int64_t writeTime);
 };
+
 } // namespace planning

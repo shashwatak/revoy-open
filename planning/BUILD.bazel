@@ -5,12 +5,14 @@ cc_library(
         "src/control-planner.cpp",
         "src/planning.cpp",
         "src/planning-pipeline.cpp",
+        "src/proximity-planner.cpp",
     ],
     hdrs = [
         "include/coarse-planner.h",
         "include/control-planner.h",
         "include/planning.h",
         "include/planning-pipeline.h",
+        "include/proximity-planner.h",
     ],
     copts = [
         "-Werror",

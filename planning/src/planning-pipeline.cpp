@@ -6,7 +6,8 @@ PlanningPipeline::PlanningPipeline(const Bounds &bounds,
                                    const BodyParams &bodyParams)
     : bounds_(bounds),
       coarsePlanner_(std::make_shared<CoarsePlanner>(bounds, bodyParams)),
-      controlPlanner_(std::make_shared<ControlPlanner>(bounds, bodyParams)) {};
+      controlPlanner_(std::make_shared<ControlPlanner>(bounds, bodyParams)),
+      proximityPlanner_(std::make_shared<ProximityPlanner>(bounds, bodyParams)) {};
 
 void PlanningPipeline::plan(const HookedPose &start, const HookedPose &goal,
                             std::shared_ptr<OccupancyGrid> grid) {
@@ -22,6 +23,9 @@ void PlanningPipeline::plan(const HookedPose &start, const HookedPose &goal,
   /// articulated vehicle with a single hook-point. If possible, will find a
   /// path to goal that respects vehicle artuculation dynamics.
   controlPlanner_->plan(start, coarsePlanner_->getLastSolution(), grid);
+
+  /// Proximity Plan: Explores 1D along travel to stop for obstacles,
+  proximityPlanner_->plan(start, {}, grid);
 }
 
 const std::shared_ptr<OccupancyGrid> &
@@ -36,6 +40,10 @@ PlanningPipeline::getCoarsePlanner() const {
 const std::shared_ptr<ControlPlanner>
 PlanningPipeline::getControlPlanner() const {
   return controlPlanner_;
+}
+const std::shared_ptr<ProximityPlanner>
+PlanningPipeline::getProximityPlanner() const {
+  return proximityPlanner_;
 }
 
 } // namespace planning

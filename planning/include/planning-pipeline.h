@@ -2,14 +2,16 @@
 
 #include "planning/coarse-planner.h"
 #include "planning/control-planner.h"
+#include "planning/proximity-planner.h"
 
 namespace planning {
+
+/// TODO: possibly replace this w/ orchestrator i.e. roslaunch or RTOS scheduler
+/// tasks.
 
 /// A series of planners, coarse search (low dimension) -> fine (high dimension)
 /// similar to "multilevel planning" but not using ompl::multilevel because
 /// non-holonomic constraints are more easily captured by ompl::control.
-/// TODO: possibly replace this w/ orchestrator i.e. roslaunch or RTOS scheduler
-/// tasks.
 class PlanningPipeline {
 public:
   PlanningPipeline() = delete;
@@ -21,6 +23,7 @@ public:
   /// get const planners, to access their debug info
   const std::shared_ptr<CoarsePlanner> getCoarsePlanner() const;
   const std::shared_ptr<ControlPlanner> getControlPlanner() const;
+  const std::shared_ptr<ProximityPlanner> getProximityPlanner() const;
 
   void plan(const HookedPose &start, const HookedPose &goal,
             std::shared_ptr<OccupancyGrid> grid
@@ -38,5 +41,6 @@ private:
   /// Planners
   std::shared_ptr<CoarsePlanner> coarsePlanner_;
   std::shared_ptr<ControlPlanner> controlPlanner_;
+  std::shared_ptr<ProximityPlanner> proximityPlanner_;
 };
 } // namespace planning
