@@ -1,10 +1,8 @@
 cc_library(
-    name = "make-scenario",
-    srcs = [
-        "make-scenario.cpp",
-    ],
+    name = "interface",
     hdrs = [
-        "make-scenario.h",
+        "perception.h",
+        "plan.h",
     ],
     copts = [
         "-Werror",

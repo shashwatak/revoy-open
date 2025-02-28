@@ -20,9 +20,11 @@ cc_library(
 cc_library(
     name = "planners",
     srcs = [
+        "planning-pipeline.cpp",
         "proximity-planner.cpp",
     ],
     hdrs = [
+        "planning-pipeline.h",
         "proximity-planner.h",
     ],
     copts = [
@@ -33,7 +35,22 @@ cc_library(
     deps = [
         ":revoy-space",
         "//planning/collisions",
+        "//planning/interface",
         "//planning/types",
         "@ompl",
+    ],
+)
+
+cc_test(
+    name = "test-planner-oneshot",
+    srcs = ["test-planner-oneshot.cpp"],
+    copts = [
+        "-Werror",
+    ],
+    deps = [
+        ":planners",
+        "//planning/make-scenario",
+        "//planning/simpl-mcap",
+        "@catch2//:catch2_main",
     ],
 )

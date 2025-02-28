@@ -12,74 +12,87 @@
 
 using namespace planning;
 
-TEST_CASE("test obstacle scenario parameterized direction and distance") {
+namespace {
+Results DoSimplLoop(const Scenario &scenario);
 
-  const double MIN_AVOIDABLE_DIST = (3 * sqrt(BodyParams().revoyLength));
-  const double EAST = 0;
-  const double SOUTH_WEST = -3 * M_PI / 4.0;
+const double MIN_AVOIDABLE_DIST = (3 * sqrt(BodyParams().revoyLength));
+const double UNAVOIDABLE_DIST = MIN_AVOIDABLE_DIST - 1;
+const double AVOIDABLE_DIST = MIN_AVOIDABLE_DIST + 3;
+const double EAST = 0;
+const double SOUTH_WEST = -3 * M_PI / 4.0;
+const double TIMEOUT = 1e7;
+const double PERMANENT_OBSTACLE = 1e100;
+const double TEMP_OBSTACLE = 1e6;
+} // namespace
 
-  static const std::vector<double> DIRS{
-      EAST,
-      SOUTH_WEST,
-  };
-  static const std::vector<double> DISTS{
-      MIN_AVOIDABLE_DIST - 1,
-      MIN_AVOIDABLE_DIST + 1,
-  };
+TEST_CASE("revoy moves only after unavoidable obstacle disappears") {
 
-  for (const double dir : DIRS) {
-    for (const double dist : DISTS) {
+  const std::string name = std::string("go-after-obstacle-disappears");
 
-      Scenario scenario = MakeDisappearingObstacleScenario(dir, dist);
+  Scenario scenario = MakeDisappearingObstacleScenario(
+      EAST, UNAVOIDABLE_DIST, TEMP_OBSTACLE, TIMEOUT, name);
 
-      std::unique_ptr<Simpl> simpl = std::make_unique<Simpl>(scenario);
+  Results results = DoSimplLoop(scenario);
 
-      std::unique_ptr<SimplMcap> mcap =
-          std::make_unique<SimplMcap>("test-simpl-" + scenario.name + ".mcap");
-
-      int64_t time = scenario.timeParams.startTime;
-      bool collision = false;
-      double maxActualSpeed = 0;
-
-      while (!simpl->isDone(time)) {
-
-        // sim + plan
-        simpl->update(time);
-
-        // record mcap
-        mcap->write(*simpl, time);
-
-        // Use full polygon intersection, from the occupancy grid used in
-        // planning. this check fails correctly for edge cases not caught by
-        // occupancy grid.
-        const Footprints revoy =
-            simpl->getRevoyEv().getBody(scenario.bodyParams);
-        const Footprints obsts = simpl->getVisibleFootprints(time);
-        collision |= IsBodyCollidingAnyObstacles(revoy, obsts);
-
-        // for this test, instantly apply speed / steer to actual speed /
-        // steer
-        const Controls controls = simpl->getProximityPlanner().getControls();
-
-        maxActualSpeed = std::fmax(maxActualSpeed, controls.speed);
-
-        // tick
-        time += scenario.timeParams.dt;
-      }
-
-      if (dist > MIN_AVOIDABLE_DIST) {
-        CHECK(!collision);
-        CHECK(maxActualSpeed > 0);
-      } else {
-        CHECK(collision);
-
-        // NOTE: purposefully using == to compare double: the value should be
-        // set to exactly 0
-        CHECK(maxActualSpeed == 0);
-      }
-
-      simpl.reset();
-      mcap.reset();
-    }
-  }
+  CHECK(results.collision);
+  CHECK(results.maxSpeed > 0);
+  CHECK(results.goalMet);
 }
+
+TEST_CASE("revoy never moves because unavoidable obstacle is blocking it") {
+  const std::string name = std::string("dont-go-obstacle-wont-disappear");
+
+  Scenario scenario = MakeDisappearingObstacleScenario(
+      SOUTH_WEST, UNAVOIDABLE_DIST, PERMANENT_OBSTACLE, TIMEOUT, name);
+
+  Results results = DoSimplLoop(scenario);
+
+  CHECK(results.collision);
+  CHECK(results.maxSpeed == 0);
+  CHECK(!results.goalMet);
+}
+
+TEST_CASE("revoy moves closer to a obstacle but stops before it") {
+
+  const std::string name = std::string("move-up-to-obstacle-and-stop");
+
+  Scenario scenario = MakeDisappearingObstacleScenario(
+      SOUTH_WEST, AVOIDABLE_DIST, PERMANENT_OBSTACLE, TIMEOUT, name);
+
+  Results results = DoSimplLoop(scenario);
+
+  CHECK(!results.collision);
+  CHECK(results.maxSpeed > 0);
+  CHECK(!results.goalMet);
+}
+
+namespace {
+Results DoSimplLoop(const Scenario &scenario) {
+
+  std::unique_ptr<Simpl> simpl = std::make_unique<Simpl>(scenario);
+
+  std::unique_ptr<SimplMcap> mcap =
+      std::make_unique<SimplMcap>("test-simpl-" + scenario.name + ".mcap");
+
+  int64_t time = scenario.timeParams.startTime;
+
+  while (!simpl->isDone(time)) {
+
+    // sim + plan
+    simpl->update(time);
+
+    // record mcap
+    mcap->write(*simpl, time);
+
+    // tick
+    time += scenario.timeParams.dt;
+  }
+
+  const Results results = simpl->getResults();
+
+  simpl.reset();
+  mcap.reset();
+
+  return results;
+}
+} // namespace

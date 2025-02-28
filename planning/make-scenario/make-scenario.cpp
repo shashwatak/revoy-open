@@ -4,13 +4,13 @@
 
 namespace planning {
 
-Scenario MakeDisappearingObstacleScenario(double dir, double dist) {
+Scenario MakeDisappearingObstacleScenario(double dir, double dist,
+                                          double disappear, double timeout,
+                                          std::string name) {
 
   Scenario scenario;
-  scenario.name = "disappearing-obstacle_" + std::to_string(dir) + "_" +
-                  std::to_string(dist);
+  scenario.name = name;
 
-  constexpr double DISAPPEAR = 1e6;
   constexpr double DEBRIS = 0.5;
 
   const HookedPose start = {{0, 0}, dir, dir};
@@ -28,7 +28,7 @@ Scenario MakeDisappearingObstacleScenario(double dir, double dist) {
                                    {DEBRIS, DEBRIS},
                                    {-DEBRIS, DEBRIS},
                                },
-                               DISAPPEAR};
+                               disappear};
 
   const Entity notInTheWay = {{notInWay, 0},
                               {
@@ -42,7 +42,7 @@ Scenario MakeDisappearingObstacleScenario(double dir, double dist) {
   scenario.entities.push_back(notInTheWay);
   scenario.start = start;
   scenario.goal = goal;
-  scenario.timeParams.timeout = DISAPPEAR * 2;
+  scenario.timeParams.timeout = timeout;
 
   return scenario;
 };
@@ -64,7 +64,6 @@ Scenario MakeYardScenario() {
                              }};
 
   scenario.entities.push_back(walls_left);
-  // scenario.entities.push_back(notInTheWay);
   scenario.start = start;
   scenario.goal = goal;
 

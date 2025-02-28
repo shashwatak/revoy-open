@@ -23,7 +23,7 @@ struct Scene {
   HookedPose revoyPose;
   Scenario scenario;
   Footprints visibleEntities;
-  std::shared_ptr<OccupancyGrid> grid;
+  const OccupancyGrid *occupancy;
   std::map<std::string, PlannerViz> planners;
 };
 
@@ -38,11 +38,11 @@ public:
 
   void write(const Simpl &simpl, int64_t writeTime);
 
-private:
   // TODO: scene is a leaky abstaction, move it into SimplMcap, and pass
   // a reference to Simpl here instead of Scene
   void write(const Scene &scene, int64_t writeTime);
 
+private:
   // file handle, file writes
   mcap::McapWriter writer;
 

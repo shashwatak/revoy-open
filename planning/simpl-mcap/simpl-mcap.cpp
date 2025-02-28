@@ -104,7 +104,7 @@ void SimplMcap::write(const Scene &scene, int64_t writeTime) {
 
   // show occupancy grid (indicating which tiles are full, which are empty)
   const auto grid =
-      MakeGrid(scene.grid, scene.revoyPose, writeTime).SerializeAsString();
+      MakeGrid(scene.occupancy, scene.revoyPose, writeTime).SerializeAsString();
   writeTopic(grid, GRID_TOPIC, writeTime);
 
   // show the bounds and start/goal poses
@@ -169,16 +169,17 @@ Scene SimplMcap::SimplToScene(const Simpl &simpl, int64_t time) {
   scene.revoy = simpl.getRevoyEv().getBody(scene.scenario.bodyParams);
   scene.revoyPose = simpl.getRevoyEv().getHookedPose();
   scene.visibleEntities = simpl.getVisibleFootprints(time);
-  scene.grid = simpl.getLastOccupancyGrid();
+  scene.occupancy = &simpl.getLastPerception().occupancy;
 
   // TODO for now this is hardcoded but we can make this configurable
   FillPath<ompl::control::SimpleSetup, RevoySpace::StateType>(
       scene.planners["proximity"].solution,
-      simpl.getProximityPlanner().getSetup());
+      simpl.getPlanningPipeline().getProximityPlanner()->getSetup());
 
-  FillGraph<ompl::control::SimpleSetup, RevoySpace::StateType>(
-      scene.planners["proximity"].graph,
-      simpl.getProximityPlanner().getSetup());
+  // EXPENSIVE
+  // FillGraph<ompl::control::SimpleSetup, RevoySpace::StateType>(
+  //     scene.planners["proximity"].graph,
+  //     simpl.getPlanningPipeline().getProximityPlanner()->getSetup());
 
   return scene;
 }

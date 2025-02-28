@@ -299,16 +299,21 @@ foxglove::ArrowPrimitive MakeArrowPrimitive(const Pose &pose) {
   return arrow;
 }
 
-foxglove::Grid MakeGrid(const std::shared_ptr<OccupancyGrid> &grid,
+foxglove::Grid MakeGrid(const OccupancyGrid *occupancy,
                         const HookedPose &revoyPose, int64_t writeTime) {
+
+  if (!occupancy) {
+    return {};
+  }
+
   foxglove::Grid fgGrid;
   fgGrid.mutable_timestamp()->set_seconds(writeTime);
   fgGrid.set_frame_id("fixed");
-  fgGrid.set_column_count(grid->getM());
+  fgGrid.set_column_count(occupancy->getM());
   fgGrid.set_cell_stride(1);
-  fgGrid.set_row_stride(grid->getM());
-  fgGrid.mutable_cell_size()->set_x(grid->getCellX());
-  fgGrid.mutable_cell_size()->set_y(grid->getCellY());
+  fgGrid.set_row_stride(occupancy->getM());
+  fgGrid.mutable_cell_size()->set_x(occupancy->getCellX());
+  fgGrid.mutable_cell_size()->set_y(occupancy->getCellY());
 
   /// "Origin of grid's corner relative to frame of reference; grid is
   /// positioned in the x-y plane relative to this origin"
@@ -319,7 +324,7 @@ foxglove::Grid MakeGrid(const std::shared_ptr<OccupancyGrid> &grid,
   gridPose.position = revoyPose.position;
 
   // then we offset the grid so that it is centered on ego
-  Point xyOffset = {-grid->getOffsetX(), grid->getOffsetY()};
+  Point xyOffset = {-occupancy->getOffsetX(), occupancy->getOffsetY()};
   xyOffset = RotatePoint(xyOffset, revoyPose.yaw);
   gridPose.position += xyOffset;
   *fgGrid.mutable_pose() = MakePose(gridPose);
@@ -331,7 +336,7 @@ foxglove::Grid MakeGrid(const std::shared_ptr<OccupancyGrid> &grid,
                         PackedElementField_NumericType_UINT8);
 
   fgGrid.mutable_fields()->Add(std::move(fgFields));
-  fgGrid.set_data(grid->fillData());
+  fgGrid.set_data(occupancy->fillData());
   return fgGrid;
 }
 

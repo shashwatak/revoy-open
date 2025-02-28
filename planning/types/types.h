@@ -78,15 +78,53 @@ struct BodyParams {
   double trailerWidth = 2.5;
 };
 
+// definition of what to run in the Simpl simulation
 struct Scenario {
+
+  // descriptive name of this scenario
   std::string name;
+
+  // unmoving unchanging obstacles
   Footprints walls;
+
+  // moving obstacles
   Entities entities;
+
+  // revoy start position
   HookedPose start;
+
+  // revoy will try to move to here
   HookedPose goal;
+
+  // cannot plan / search outside this
   Bounds bounds;
+
+  // start / end times, delta time
   TimeParams timeParams;
+
+  // length, width, etc
   BodyParams bodyParams;
+};
+
+struct Results {
+
+  // the source of these results
+  Scenario scenario;
+
+  // exceeded time bound
+  bool timeout = false;
+
+  // contacted obstacle
+  bool collision = false;
+
+  // revoy reached goal
+  bool goalMet = false;
+
+  // revoy min/max over the course of the scenario
+  double minSpeed = 0;
+  double maxSpeed = 0;
+
+  // TODO: planner specific aggregate results maybe?
 };
 
 struct Controls {

@@ -58,7 +58,7 @@ ProximityPlanner::ProximityPlanner(const Bounds &bounds,
 };
 
 void ProximityPlanner::plan(const HookedPose &start_, const HookedPose &_,
-                            std::shared_ptr<OccupancyGrid> grid) {
+                            const OccupancyGrid &grid) {
 
   setup_.clear();
 
@@ -81,7 +81,7 @@ void ProximityPlanner::plan(const HookedPose &start_, const HookedPose &_,
 
   // updating the collision checker with the latest occupancy grid
   const Pose &gridPose{{start->getX(), start->getY()}, start->getYaw()};
-  validityChecker_->setOccupancyGrid(grid, gridPose);
+  validityChecker_->setOccupancyGrid(&grid, gridPose);
 
   // ompl setup
   setup_.setup();
@@ -139,18 +139,20 @@ ProximityPlanner::ValidityChecker::ValidityChecker(
     : ompl::base::StateValidityChecker(si), bodyParams_(bodyParams) {}
 
 void ProximityPlanner::ValidityChecker::setOccupancyGrid(
-    const std::shared_ptr<OccupancyGrid> grid, const Pose &pose) {
+    const OccupancyGrid *grid, const Pose &pose) {
   grid_ = grid;
   currentPose_ = pose;
 }
 
 bool ProximityPlanner::ValidityChecker::isValid(
     const ompl::base::State *state_) const {
+
   if (!grid_) {
     std::cout << "ERROR: no occupancy grid set, no validity check" << std::endl;
     assert(false);
     return false;
   }
+
   const auto *state = state_->as<RevoySpace::StateType>();
   bool isValid = si_->satisfiesBounds(state);
 

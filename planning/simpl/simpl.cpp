@@ -18,15 +18,13 @@ static constexpr uint16_t NUM_CELLS = 200;
 static constexpr double CELL_LENGTH = 0.1; // meters
 static constexpr double GRID_OFFSET =
     CELL_LENGTH * ((float)NUM_CELLS) / 2.0; // meters
-
 } // namespace
 
 Simpl::Simpl(Scenario scenario)
     : scenario_(scenario), revoyEv_(scenario_.start),
-      proximityPlanner_(scenario_.bounds, scenario_.bodyParams),
-      grid_(std::make_shared<OccupancyGrid>(NUM_CELLS, NUM_CELLS, CELL_LENGTH,
-                                            CELL_LENGTH, GRID_OFFSET,
-                                            GRID_OFFSET)) {};
+      planningPipeline_(scenario_.bounds, scenario_.bodyParams),
+      perception_({}, {NUM_CELLS, NUM_CELLS, CELL_LENGTH, CELL_LENGTH,
+                       GRID_OFFSET, GRID_OFFSET}) {};
 
 void Simpl::update(int64_t time) {
 
@@ -34,52 +32,53 @@ void Simpl::update(int64_t time) {
   const Footprints footprints = getVisibleFootprints(time);
 
   // insert footprints into occupancy grid
-  FootprintsToOccupancyGrid(*grid_, footprints, revoyEv_.getHookedPose());
+  FootprintsToOccupancyGrid(perception_.occupancy, footprints,
+                            revoyEv_.getHookedPose());
 
   // update plan w/ latest revoy pose and occupancy grid
-  proximityPlanner_.plan(revoyEv_.getHookedPose(), scenario_.goal, grid_);
+  const Plan plan = planningPipeline_.getNextPlan(revoyEv_.getHookedPose(),
+                                                  scenario_.goal, perception_);
 
-  // get controls from caller
-  const Controls controls = proximityPlanner_.getControls();
+  const Controls &controls = plan.targetControls;
 
   // update revoy w/ controls
   revoyEv_.update(controls, scenario_.timeParams.dt / 1e6);
+
+  results_.maxSpeed = std::fmax(results_.maxSpeed, controls.speed);
+  results_.minSpeed = std::fmin(results_.minSpeed, controls.speed);
+
+  results_.collision |= isColliding(time);
+  results_.timeout |= isTimeout(time);
+  results_.goalMet |= isGoalMet();
 }
 
-bool Simpl::isDone(int64_t time) const {
+bool Simpl::isColliding(int64_t time) const {
+  // Use full polygon intersection, from the occupancy grid used in
+  // planning. this check fails correctly for edge cases not caught by
+  // occupancy grid.
+  const Footprints revoy = revoyEv_.getBody(scenario_.bodyParams);
+  const Footprints obsts = getVisibleFootprints(time);
+  return IsBodyCollidingAnyObstacles(revoy, obsts);
+}
 
-  // timeout
-  if (time > scenario_.timeParams.timeout + scenario_.timeParams.startTime) {
-    return true;
-  }
+bool Simpl::isTimeout(int64_t time) const {
+  return time > scenario_.timeParams.timeout + scenario_.timeParams.startTime;
+}
 
-  // revoy footprint at the origin, used to check against grid cells
-  const Footprints bodyZero = FootprintsFromPose(
-      {{0, 0},
-       0,
-       revoyEv_.getHookedPose().trailerYaw - revoyEv_.getHookedPose().yaw},
-      scenario_.bodyParams);
-
-  // check if revoy footprint cells are occupied by obstacles,
-  // if so, then no planning is possible.
-  const auto grid = getLastOccupancyGrid();
-  bool invalidStart = false;
-  if (grid && grid->areFootprintsOccupied(bodyZero)) {
-    invalidStart = true;
-  }
-
+bool Simpl::isGoalMet() const {
   // goal is met, scenario is complete
   // TODO: use GoalRegion comparison
   static const double GOAL_TOLERANCE = 0.1;
-  const bool isGoal =
-      (revoyEv_.getHookedPose().position - scenario_.goal.position).norm() <=
-          GOAL_TOLERANCE &&
-      fabs(fixRadian(revoyEv_.getHookedPose().yaw - scenario_.goal.yaw)) <=
-          GOAL_TOLERANCE &&
-      fabs(fixRadian(revoyEv_.getHookedPose().trailerYaw -
-                     scenario_.goal.trailerYaw)) <= GOAL_TOLERANCE;
+  return (revoyEv_.getHookedPose().position - scenario_.goal.position).norm() <=
+             GOAL_TOLERANCE &&
+         fabs(fixRadian(revoyEv_.getHookedPose().yaw - scenario_.goal.yaw)) <=
+             GOAL_TOLERANCE &&
+         fabs(fixRadian(revoyEv_.getHookedPose().trailerYaw -
+                        scenario_.goal.trailerYaw)) <= GOAL_TOLERANCE;
+}
 
-  return isGoal || invalidStart;
+bool Simpl::isDone(int64_t time) const {
+  return isTimeout(time) || isGoalMet();
 }
 
 const Footprints Simpl::getVisibleFootprints(int64_t time) const {
@@ -96,13 +95,12 @@ const Footprints Simpl::getVisibleFootprints(int64_t time) const {
   return footprints;
 }
 
-const std::shared_ptr<OccupancyGrid> &Simpl::getLastOccupancyGrid() const {
-  return grid_;
-}
+const Perception &Simpl::getLastPerception() const { return perception_; }
 
 const Scenario &Simpl::getScenario() const { return scenario_; }
-const ProximityPlanner &Simpl::getProximityPlanner() const {
-  return proximityPlanner_;
+const Results &Simpl::getResults() const { return results_; }
+const PlanningPipeline &Simpl::getPlanningPipeline() const {
+  return planningPipeline_;
 };
 const MockRevoyEv &Simpl::getRevoyEv() const { return revoyEv_; };
 

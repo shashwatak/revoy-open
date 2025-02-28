@@ -24,8 +24,8 @@ foxglove::SceneUpdate MakeScenarioSceneUpdate(const Scenario &scenario,
 foxglove::LinePrimitive MakePath(const Path &path);
 foxglove::LinePrimitive MakeFootprint(const Footprint &footprint);
 foxglove::ArrowPrimitive MakeArrowPrimitive(const Pose &pose);
-foxglove::Grid MakeGrid(const std::shared_ptr<OccupancyGrid> &grid,
-                        const HookedPose &revoyPose, int64_t writeTime);
+foxglove::Grid MakeGrid(const OccupancyGrid *grid, const HookedPose &revoyPose,
+                        int64_t writeTime);
 
 // will be used
 // foxglove::SceneUpdate MakePathSceneUpdate(const std::vector<Pose> &poses,

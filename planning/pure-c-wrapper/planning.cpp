@@ -1,7 +1,9 @@
 #include "planning/planning.h"
 
 #include "planning/occupancy-grid.h"
-#include "planning/proximity-planner.h"
+#include "planning/perception.h"
+#include "planning/plan.h"
+#include "planning/planning-pipeline.h"
 #include "planning/types.h"
 
 #include <bitset>
@@ -13,27 +15,35 @@
 #include <memory>
 #include <string>
 
+// Somewhat unfortunate name-collision, I want the Pure C interface and
+// the C++ interface to use the same names (Plan and Perception).
+// In order to support both, this file has to absorb the weirdness.
+using CPerception = ::Perception;
+using CPlan = ::Plan;
+
+using CppPerception = planning::Perception;
+using CppPlan = planning::Plan;
+
 using namespace planning;
 
-static std::unique_ptr<ProximityPlanner> planner = nullptr;
+static std::unique_ptr<PlanningPipeline> planner_ = nullptr;
 
-/// replace shared w/ unique
-static std::shared_ptr<OccupancyGrid> grid = nullptr;
+static std::unique_ptr<CppPerception> cppPerception_ = nullptr;
 
 static const Bounds BOUNDS;
 static const BodyParams BODY;
 
-Perception MakeEmptyPerception() { return {}; }
+CPerception MakeEmptyPerception() { return {}; }
 
 void StartPlanning() {
   std::cout << "Initalize Planning" << std::endl;
-  planner = std::make_unique<ProximityPlanner>(BOUNDS, BODY);
-  grid = std::make_shared<OccupancyGrid>();
+  planner_ = std::make_unique<PlanningPipeline>(BOUNDS, BODY);
+  cppPerception_ = std::make_unique<CppPerception>();
 };
 
 void EndPlanning() {
   std::cout << "Terminate Planning" << std::endl;
-  planner.reset();
+  planner_.reset();
 };
 
 /// for now, these dont matter because there is no localization, and we assume
@@ -41,7 +51,7 @@ void EndPlanning() {
 static const HookedPose START{{0, 0}, 0, 0};
 static const HookedPose GOAL{{1, 0}, 0, 0};
 
-Plan GetNextPlan(const Perception *perception) {
+CPlan GetNextPlan(const CPerception *perception) {
 
   if (!perception) {
     return {};
@@ -79,25 +89,26 @@ Plan GetNextPlan(const Perception *perception) {
   // std::cout << "offsetX: " << std::to_string(offsetX) << std::endl;
   // std::cout << "offsetY: " << std::to_string(offsetY) << std::endl;
 
-  grid->reset(perception->occupancy, perception->numBytes, N, M, cellX, cellY,
-              offsetX, offsetY);
-  planner->plan(START, GOAL, grid);
+  // run planning
+  cppPerception_->occupancy.reset(perception->occupancy, perception->numBytes,
+                                  N, M, cellX, cellY, offsetX, offsetY);
+  CppPlan cppPlan = planner_->getNextPlan(START, GOAL, *cppPerception_);
+  const Controls controls = cppPlan.targetControls;
 
-  const Controls controls = planner->getControls();
-
-  Plan plan = {.setSpeed = controls.speed,
-               .setSteer = controls.steer,
-               .gridWidth = grid->getN(),
-               .gridHeight = grid->getM(),
-               .cellSizeX = grid->getCellX(),
-               .cellSizeY = grid->getCellY(),
-               .originX = grid->getOffsetX(),
-               .originY = grid->getOffsetY(),
-               .gridData = nullptr,
-               .gridDataSize = 0};
+  // gather planning output into C struct
+  CPlan plan = {.setSpeed = controls.speed,
+                .setSteer = controls.steer,
+                .gridWidth = cppPerception_->occupancy.getN(),
+                .gridHeight = cppPerception_->occupancy.getM(),
+                .cellSizeX = cppPerception_->occupancy.getCellX(),
+                .cellSizeY = cppPerception_->occupancy.getCellY(),
+                .originX = cppPerception_->occupancy.getOffsetX(),
+                .originY = cppPerception_->occupancy.getOffsetY(),
+                .gridData = nullptr,
+                .gridDataSize = 0};
 
   // Copy grid data
-  std::string gridData = grid->fillData();
+  std::string gridData = cppPerception_->occupancy.fillData();
   if (!gridData.empty()) {
     plan.gridData = new char[gridData.size()];
     memcpy(plan.gridData, gridData.data(), gridData.size());

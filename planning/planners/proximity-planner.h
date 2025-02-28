@@ -13,7 +13,6 @@
 namespace planning {
 
 /// Plans to move forward slowly unless an obstacle is in the way.
-///
 class ProximityPlanner {
 public:
   ProximityPlanner() = delete;
@@ -21,7 +20,7 @@ public:
 
   /// Completes ompl setup, calls ompl solve
   void plan(const HookedPose &start, const HookedPose &goal,
-            std::shared_ptr<OccupancyGrid> grid);
+            const OccupancyGrid &grid);
 
   // output to controls.
   // capture results for output to downstream controls system.
@@ -58,15 +57,14 @@ public:
     bool isValid(const ompl::base::State *state_) const override;
 
     /// used by us to pass in latest obstacle positions
-    void setOccupancyGrid(const std::shared_ptr<OccupancyGrid> grid,
-                          const Pose &revoyPose);
+    void setOccupancyGrid(const OccupancyGrid *grid, const Pose &revoyPose);
 
     // void setFootprints(const Footprints &obstacles);
 
   private:
     BodyParams bodyParams_ = {};
-    std::shared_ptr<OccupancyGrid> grid_;
     Pose currentPose_ = {};
+    const OccupancyGrid *grid_ = nullptr;
   };
 
   /// Used by Control-based Planners, produce a new search node given a possible
