@@ -65,7 +65,7 @@ SimplMcap::SimplMcap(const std::string outputFilename) {
            ACTORS_TOPIC);
 
   // TODO replace hardcoded values with configuration
-  static const std::vector<std::string> PLANNER_NAMES{"proximity"};
+  static const std::vector<std::string> PLANNER_NAMES{"proximity", "coarse"};
 
   // will visualize provided planner debug info, could be costly
   for (const std::string &name : PLANNER_NAMES) {
@@ -175,6 +175,9 @@ Scene SimplMcap::SimplToScene(const Simpl &simpl, int64_t time) {
   FillPath<ompl::control::SimpleSetup, RevoySpace>(
       scene.planners["proximity"].solution,
       simpl.getPlanningPipeline().getProximityPlanner()->getSetup());
+  FillPath<ompl::geometric::SimpleSetup, CoarsePlanner::Flatland::StateType>(
+      scene.planners["coarse"].solution,
+      simpl.getPlanningPipeline().getCoarsePlanner()->getSetup());
 
   // EXPENSIVE
   // FillGraph<ompl::control::SimpleSetup, RevoySpace::StateType>(

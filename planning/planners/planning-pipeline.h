@@ -1,6 +1,6 @@
 #pragma once
 
-// #include "planning/coarse-planner.h"
+#include "planning/coarse-planner.h"
 // #include "planning/control-planner.h"
 #include "planning/proximity-planner.h"
 
@@ -37,6 +37,8 @@ public:
   PlanningPipeline() = delete;
   PlanningPipeline(const Bounds &bounds, const BodyParams &bodyParams);
 
+  // Produces a Plan, given the current position, a goal position, and awareness
+  // of surroundings.
   Plan getNextPlan(const HookedPose &start, const HookedPose &goal,
                    const Perception &perception);
 
@@ -44,13 +46,14 @@ public:
   // we really only need this for visualization, so we should maybe
   // do something with a friend function?
   const std::shared_ptr<ProximityPlanner> getProximityPlanner() const;
+  const std::shared_ptr<CoarsePlanner> getCoarsePlanner() const;
 
 private:
   // Params, Inputs, Outputs
   Bounds bounds_ = {};
 
   // Planners
-  // std::shared_ptr<CoarsePlanner> coarsePlanner_;
+  std::shared_ptr<CoarsePlanner> coarsePlanner_;
   // std::shared_ptr<ControlPlanner> controlPlanner_;
   std::shared_ptr<ProximityPlanner> proximityPlanner_;
 };
