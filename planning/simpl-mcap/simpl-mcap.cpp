@@ -172,7 +172,7 @@ Scene SimplMcap::SimplToScene(const Simpl &simpl, int64_t time) {
   scene.occupancy = &simpl.getLastPerception().occupancy;
 
   // TODO for now this is hardcoded but we can make this configurable
-  FillPath<ompl::control::SimpleSetup, RevoySpace::StateType>(
+  FillPath<ompl::control::SimpleSetup, RevoySpace>(
       scene.planners["proximity"].solution,
       simpl.getPlanningPipeline().getProximityPlanner()->getSetup());
 
