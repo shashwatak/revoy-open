@@ -171,11 +171,11 @@ Scene SimplMcap::SimplToScene(const Simpl &simpl, int64_t time) {
   scene.visibleEntities = simpl.getVisibleFootprints(time);
   scene.occupancy = &simpl.getLastPerception().occupancy;
 
-  // TODO for now this is hardcoded but we can make this configurable
-  FillPath<ompl::control::SimpleSetup, RevoySpace>(
-      scene.planners["proximity"].solution,
-      simpl.getPlanningPipeline().getProximityPlanner()->getSetup());
-  FillPath<ompl::geometric::SimpleSetup, CoarsePlanner::Flatland::StateType>(
+  // // TODO for now this is hardcoded but we can make this configurable
+  // FillPath<ompl::control::SimpleSetup, RevoySpace>(
+  //     scene.planners["proximity"].solution,
+  //     simpl.getPlanningPipeline().getProximityPlanner()->getSetup());
+  FillPath<ompl::geometric::SimpleSetup, CoarsePlanner::Flatland>(
       scene.planners["coarse"].solution,
       simpl.getPlanningPipeline().getCoarsePlanner()->getSetup());
 
