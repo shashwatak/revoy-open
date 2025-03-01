@@ -20,6 +20,7 @@ CoarsePlanner::CoarsePlanner(const Bounds &bounds, const BodyParams &bodyParams)
     : bounds_(bounds), space_(std::make_shared<Flatland>(bounds)),
       setup_(space_), validityChecker_(std::make_shared<ValidityChecker>(
                           setup_.getSpaceInformation(), bodyParams)) {
+
   ompl::msg::setLogLevel(ompl::msg::LogLevel::LOG_WARN);
 
   // set state validity checking for this space
@@ -59,7 +60,7 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
   goal->setY(goal_.position.y());
   goal->setYaw(goal_.yaw);
 
-  setup_.setStartAndGoalStates(start, goal, 1);
+  setup_.setStartAndGoalStates(start, goal, 0.2);
 
   validityChecker_->setUndrivableAreas(undrivableAreas);
 

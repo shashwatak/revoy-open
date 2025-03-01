@@ -57,7 +57,7 @@ public:
 
   class Flatland : public ompl::base::ReedsSheppStateSpace {
   public:
-    Flatland(const Bounds &bounds) : ompl::base::ReedsSheppStateSpace(15.0) {
+    Flatland(const Bounds &bounds) : ompl::base::ReedsSheppStateSpace(25.0) {
       ompl::base::RealVectorBounds rbounds(2);
       rbounds.low[0] = bounds.lowerX;
       rbounds.low[1] = bounds.lowerY;
