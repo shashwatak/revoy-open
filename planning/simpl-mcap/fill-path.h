@@ -18,6 +18,10 @@ void FillPath(Path &path, const SimpleSetup &setup) {
     return;
   }
 
+  // using the state space to allocate a new state, we will fill it with the interpolated values
+  auto space = setup.getStateSpace()->template as<StateSpace>();
+  auto tempState = space->allocState()->template as<typename StateSpace::StateType>();
+
   auto &solution = setup.getSolutionPath();
   for (size_t i = 1; i < setup.getSolutionPath().getStateCount(); i++) {
 
@@ -32,20 +36,19 @@ void FillPath(Path &path, const SimpleSetup &setup) {
     double t = 0;
     while (t < 1) {
 
-      // using the state space to allocate a new state, we will fill it with the interpolated values
-      auto space = setup.getStateSpace()->template as<StateSpace>();
-      auto newState = space->allocState()->template as<typename StateSpace::StateType>();
-
       // do the interpolation
-      space->interpolate(prevState, state, t, newState);
+      space->interpolate(prevState, state, t, tempState);
 
       // save the interpolated state to output
-      path.push_back({newState->getX(), newState->getY()});
+      path.push_back({tempState->getX(), tempState->getY()});
 
       // increment and continue
       t += frac;
     }
   }
+
+  // need to free the temp state, otherwise leak
+  space->freeState(tempState);
 };
 
 
