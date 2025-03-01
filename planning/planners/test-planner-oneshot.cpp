@@ -2,8 +2,8 @@
 #include <catch2/catch_test_macros.hpp>
 
 // #include "planning/control-planner.h"
-#include "planning/fill-path.h"
 #include "planning/fill-graph.h"
+#include "planning/fill-path.h"
 
 #include "planning/add-footprint-to-grid.h"
 #include "planning/footprint-overlap.h"

@@ -15,7 +15,6 @@ namespace planning {
 // Plans to move forward slowly unless an obstacle is in the way.
 class ProximityPlanner {
 public:
-
   ProximityPlanner() = delete;
   ProximityPlanner(const Bounds &bounds, const BodyParams &bodyParams);
 
