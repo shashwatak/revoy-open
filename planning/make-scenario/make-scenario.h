@@ -13,4 +13,7 @@ Scenario MakeDisappearingObstacleScenario(double dir, double dist,
 // return Yard Scenario (WIP)
 Scenario MakeYardScenario();
 
+// return simple left turn
+Scenario MakeTurningScenario(std::string name);
+
 } // namespace planning

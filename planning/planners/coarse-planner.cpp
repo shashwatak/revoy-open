@@ -65,7 +65,7 @@ void CoarsePlanner::plan(const HookedPose &start_, const HookedPose &goal_,
 
   setup_.setup();
 
-  ompl::base::PlannerStatus solved = setup_.solve(0.1);
+  ompl::base::PlannerStatus solved = setup_.solve(1);
 
   if (solved != ompl::base::PlannerStatus::EXACT_SOLUTION &&
       solved != ompl::base::PlannerStatus::APPROXIMATE_SOLUTION) {

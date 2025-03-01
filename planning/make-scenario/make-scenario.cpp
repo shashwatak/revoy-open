@@ -47,10 +47,10 @@ Scenario MakeDisappearingObstacleScenario(double dir, double dist,
   return scenario;
 };
 
-Scenario MakeYardScenario() {
+Scenario MakeYardScenario(std::string name) {
 
   Scenario scenario;
-  scenario.name = "yard";
+  scenario.name = name;
 
   const HookedPose start = {{0, 0}, 0, 0};
   const HookedPose goal = {{1, 0}, 0, 0};
@@ -64,6 +64,21 @@ Scenario MakeYardScenario() {
                              }};
 
   scenario.entities.push_back(walls_left);
+  scenario.start = start;
+  scenario.goal = goal;
+
+  scenario.timeParams.timeout = 1e7;
+  return scenario;
+};
+
+Scenario MakeTurningScenario(std::string name) {
+
+  Scenario scenario;
+  scenario.name = name;
+
+  const HookedPose start = {{0, 0}, 0, 0};
+  const HookedPose goal = {{15, 15}, std::numbers::pi, std::numbers::pi};
+
   scenario.start = start;
   scenario.goal = goal;
 
