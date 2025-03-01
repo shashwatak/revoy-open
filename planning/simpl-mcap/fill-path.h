@@ -59,7 +59,6 @@ void FillPath(Path &path, const SimpleSetup &setup) {
 
   // need to free the temp state, otherwise leak
   space->freeState(tempState);
-
 };
 
 } // namespace planning
