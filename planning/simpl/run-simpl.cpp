@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
   // TODO: the Yard scenaro is currently just a placeholder
   // replace with argparse logic and choose a scenario
   const std::vector<std::string> args(argv + 1, argv + argc);
-  const Scenario scenario = MakeYardScenario();
+  const Scenario scenario = MakeYardScenario("run-simpl");
 
   // initialize simulator
   std::unique_ptr<Simpl> simpl = std::make_unique<Simpl>(scenario);
