@@ -1,5 +1,6 @@
 load("@bazel_tools//tools/cpp:unix_cc_toolchain_config.bzl", "cc_toolchain_config")
-load("@rules_python//python:defs.bzl", "py_runtime_pair")
+load("@rules_cc//cc/toolchains:cc_toolchain.bzl", "cc_toolchain")
+load("@rules_python//python:defs.bzl", "py_runtime", "py_runtime_pair")
 
 cc_toolchain_config(
     name = "clang-cc-toolchain-config",

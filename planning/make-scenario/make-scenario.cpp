@@ -47,7 +47,7 @@ Scenario MakeDisappearingObstacleScenario(double dir, double dist,
   return scenario;
 };
 
-Scenario MakeYardScenario(const std::string& name) {
+Scenario MakeYardScenario(const std::string &name) {
 
   Scenario scenario;
   scenario.name = name;
@@ -71,7 +71,7 @@ Scenario MakeYardScenario(const std::string& name) {
   return scenario;
 };
 
-Scenario MakeTurningScenario(const std::string& name) {
+Scenario MakeTurningScenario(const std::string &name) {
 
   Scenario scenario;
   scenario.name = name;
