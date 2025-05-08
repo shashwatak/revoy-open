@@ -7,6 +7,9 @@ env:
   REGISTRY_PASSWORD: ${{ github.token }}
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
 on:
+  push:
+    branch: main
+
   pull_request:
     types: [opened, reopened, synchronize]
 
