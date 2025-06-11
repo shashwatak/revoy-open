@@ -25,7 +25,7 @@ Plan PlanningPipeline::getNextPlan(const HookedPose &start,
   // controlPlanner_->plan(start, coarsePlanner_->getLastSolution(), grid);
 
   /// Proximity Plan: Explores 1D along travel to stop for obstacles,
-  proximityPlanner_->plan(start, {}, perception.occupancy);
+  // proximityPlanner_->plan(start, {}, perception.occupancy);
 
   // Plan
   return {

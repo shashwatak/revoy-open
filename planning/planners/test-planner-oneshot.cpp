@@ -8,8 +8,8 @@
 #include "planning/add-footprint-to-grid.h"
 #include "planning/footprint-overlap.h"
 #include "planning/footprint-transform.h"
+#include "planning/holonomic.h"
 #include "planning/make-scenario.h"
-#include "planning/mock-revoy-ev.h"
 
 #include "planning/simpl-mcap.h"
 
@@ -26,7 +26,7 @@ TEST_CASE("run the coarse planner once, then control planner along") {
   // setup planners and mock revoy
   CoarsePlanner coarsePlanner(scenario.bounds, scenario.bodyParams);
   // ControlPlanner controlPlanner (scenario.bounds, scenario.bodyParams);
-  MockRevoyEv mockRevoyEv(scenario.start);
+  Holonomic mockRevoyEv(scenario.start);
 
   // add obstacles to occupancy grid
   Footprints footprints;

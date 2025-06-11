@@ -21,7 +21,7 @@ CoarsePlanner::CoarsePlanner(const Bounds &bounds, const BodyParams &bodyParams)
       setup_(space_), validityChecker_(std::make_shared<ValidityChecker>(
                           setup_.getSpaceInformation(), bodyParams)) {
 
-  ompl::msg::setLogLevel(ompl::msg::LogLevel::LOG_WARN);
+  ompl::msg::setLogLevel(ompl::msg::LogLevel::LOG_DEBUG);
 
   // set state validity checking for this space
   setup_.setStateValidityChecker(validityChecker_);
@@ -104,7 +104,6 @@ bool CoarsePlanner::ValidityChecker::isValid(
       isValid &= !AreFootprintsOverlapping(part, area);
     }
   }
-
   return isValid;
 };
 

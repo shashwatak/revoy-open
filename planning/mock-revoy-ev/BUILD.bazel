@@ -18,3 +18,22 @@ cc_library(
         "//planning/types",
     ],
 )
+
+cc_library(
+    name = "holonomic",
+    srcs = [
+        "holonomic.cpp",
+    ],
+    hdrs = [
+        "holonomic.h",
+    ],
+    copts = [
+        "-Werror",
+    ],
+    include_prefix = "planning",
+    visibility = ["//planning:__subpackages__"],
+    deps = [
+        "//planning/collisions",
+        "//planning/types",
+    ],
+)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "planning/mock-revoy-ev.h"
+#include "planning/holonomic.h"
 #include "planning/planning-pipeline.h"
 #include "planning/types.h"
 
@@ -13,7 +13,7 @@ class Simpl {
   Scenario scenario_;
 
   // simple vehicle model to move around in the simulation
-  MockRevoyEv revoyEv_;
+  Holonomic revoyEv_;
 
   // the planner, outputs commands to the vehicle model
   PlanningPipeline planningPipeline_;
@@ -51,7 +51,7 @@ public:
   const PlanningPipeline &getPlanningPipeline() const;
 
   // the following ar used for debug visualization or analysis
-  const MockRevoyEv &getRevoyEv() const;
+  const Holonomic &getRevoyEv() const;
   const Scenario &getScenario() const;
   const Results &getResults() const;
   const Footprints getVisibleFootprints(int64_t time) const;

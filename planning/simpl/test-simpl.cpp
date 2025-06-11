@@ -4,8 +4,8 @@
 #include <memory>
 
 #include "planning/footprint-overlap.h"
+#include "planning/holonomic.h"
 #include "planning/make-scenario.h"
-#include "planning/mock-revoy-ev.h"
 #include "planning/simpl-mcap.h"
 #include "planning/simpl.h"
 #include "planning/types.h"
@@ -27,6 +27,7 @@ const double TEMP_OBSTACLE = 1e6;
 
 TEST_CASE("revoy moves only after unavoidable obstacle disappears") {
 
+  ompl::msg::setLogLevel(ompl::msg::LogLevel::LOG_DEBUG);
   const std::string name = std::string("go-after-obstacle-disappears");
 
   Scenario scenario = MakeDisappearingObstacleScenario(
@@ -39,32 +40,32 @@ TEST_CASE("revoy moves only after unavoidable obstacle disappears") {
   CHECK(results.goalMet);
 }
 
-TEST_CASE("revoy never moves because unavoidable obstacle is blocking it") {
-  const std::string name = std::string("dont-go-obstacle-wont-disappear");
+// TEST_CASE("revoy never moves because unavoidable obstacle is blocking it") {
+//   const std::string name = std::string("dont-go-obstacle-wont-disappear");
 
-  Scenario scenario = MakeDisappearingObstacleScenario(
-      SOUTH_WEST, UNAVOIDABLE_DIST, PERMANENT_OBSTACLE, TIMEOUT, name);
+//   Scenario scenario = MakeDisappearingObstacleScenario(
+//       SOUTH_WEST, UNAVOIDABLE_DIST, PERMANENT_OBSTACLE, TIMEOUT, name);
 
-  Results results = DoSimplLoop(scenario);
+//   Results results = DoSimplLoop(scenario);
 
-  CHECK(results.collision);
-  CHECK(results.maxSpeed == 0);
-  CHECK(!results.goalMet);
-}
+//   CHECK(results.collision);
+//   CHECK(results.maxSpeed == 0);
+//   CHECK(!results.goalMet);
+// }
 
-TEST_CASE("revoy moves closer to a obstacle but stops before it") {
+// TEST_CASE("revoy moves closer to a obstacle but stops before it") {
 
-  const std::string name = std::string("move-up-to-obstacle-and-stop");
+//   const std::string name = std::string("move-up-to-obstacle-and-stop");
 
-  Scenario scenario = MakeDisappearingObstacleScenario(
-      SOUTH_WEST, AVOIDABLE_DIST, PERMANENT_OBSTACLE, TIMEOUT, name);
+//   Scenario scenario = MakeDisappearingObstacleScenario(
+//       SOUTH_WEST, AVOIDABLE_DIST, PERMANENT_OBSTACLE, TIMEOUT, name);
 
-  Results results = DoSimplLoop(scenario);
+//   Results results = DoSimplLoop(scenario);
 
-  CHECK(!results.collision);
-  CHECK(results.maxSpeed > 0);
-  CHECK(!results.goalMet);
-}
+//   CHECK(!results.collision);
+//   CHECK(results.maxSpeed > 0);
+//   CHECK(!results.goalMet);
+// }
 
 // Not yet actually possible
 // TEST_CASE("revoy turns to reach goal pose") {

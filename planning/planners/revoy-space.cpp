@@ -1,5 +1,5 @@
 #include "planning/revoy-space.h"
-#include "planning/mock-revoy-ev.h"
+#include "planning/holonomic.h"
 
 #include <ompl/tools/config/MagicConstants.h>
 
@@ -56,7 +56,7 @@ void RevoySpace::Propagate(const RevoySpace::StateType *state,
   };
 
   // propagation result
-  MockRevoyEv revoyEv(start);
+  Holonomic revoyEv(start);
   revoyEv.update(controls, duration);
   const HookedPose end = revoyEv.getHookedPose();
 

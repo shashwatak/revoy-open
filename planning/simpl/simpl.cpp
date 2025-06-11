@@ -78,7 +78,11 @@ bool Simpl::isGoalMet() const {
 }
 
 bool Simpl::isDone(int64_t time) const {
-  return isTimeout(time) || isGoalMet();
+  return isTimeout(time) || isGoalMet() ||
+         (time > scenario_.timeParams.startTime && !getPlanningPipeline()
+                                                        .getCoarsePlanner()
+                                                        ->getSetup()
+                                                        .haveSolutionPath());
 }
 
 const Footprints Simpl::getVisibleFootprints(int64_t time) const {
@@ -102,6 +106,6 @@ const Results &Simpl::getResults() const { return results_; }
 const PlanningPipeline &Simpl::getPlanningPipeline() const {
   return planningPipeline_;
 };
-const MockRevoyEv &Simpl::getRevoyEv() const { return revoyEv_; };
+const Holonomic &Simpl::getRevoyEv() const { return revoyEv_; };
 
 } // namespace planning

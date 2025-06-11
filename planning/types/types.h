@@ -65,8 +65,8 @@ struct TimeParams {
   // 1.7e15 is GMT Tuesday, November 14, 2023 10:13:20 PM
   double startTime = 1.7e15;
 
-  // 60,000,000 us == 60,000 ms == 60 s
-  double timeout = 6e7;
+  // 6,000,000 us == 6,000 ms == 6 s
+  double timeout = 6e6;
 };
 
 struct BodyParams {

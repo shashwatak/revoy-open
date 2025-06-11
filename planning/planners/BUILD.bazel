@@ -14,7 +14,7 @@ cc_library(
     ],
     include_prefix = "planning",
     deps = [
-        "//planning/mock-revoy-ev",
+        "//planning/mock-revoy-ev:holonomic",
         "//planning/types",
         "@ompl",
     ],

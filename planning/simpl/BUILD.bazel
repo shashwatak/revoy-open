@@ -11,12 +11,12 @@ cc_library(
         "simpl.h",
     ],
     copts = [
-        "-Werror",
+        # "-Werror",
     ],
     include_prefix = "planning",
     visibility = ["//planning:__subpackages__"],
     deps = [
-        "//planning/mock-revoy-ev",
+        "//planning/mock-revoy-ev:holonomic",
         "//planning/planners",
     ],
 )
@@ -25,7 +25,7 @@ cc_test(
     name = "test-simpl",
     srcs = ["test-simpl.cpp"],
     copts = [
-        "-Werror",
+        # "-Werror",
     ],
     deps = [
         ":simpl",

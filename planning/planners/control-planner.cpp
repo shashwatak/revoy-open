@@ -19,7 +19,7 @@ ControlPlanner::ControlPlanner(const Bounds &bounds,
                            setup_.getSpaceInformation(), bodyParams)),
       propagator_(std::make_shared<Propagator>(setup_.getSpaceInformation())) {
 
-  ompl::msg::setLogLevel(ompl::msg::LogLevel::LOG_WARN);
+  ompl::msg::setLogLevel(ompl::msg::LogLevel::LOG_DEBUG);
 
   // set bounds for speed and steer
   ompl::base::RealVectorBounds cbounds(2);
